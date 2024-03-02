@@ -9,7 +9,7 @@ export const DEPOSIT_TAG = {
   "buy-me-a-coffee-sponsor": {
     size: "medium",
     flavour: "chocolate",
-  }
+  },
 };
 // Contract template save as Gist (Deposit Test)
 export const mkDepositContract = (
@@ -40,3 +40,5 @@ export const mkDepositContract = (
   };
   return demoContract;
 };
+
+
