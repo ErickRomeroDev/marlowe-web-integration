@@ -28,8 +28,7 @@ import {
   CreateContractRequest,
 } from "@marlowe.io/runtime-lifecycle/api";
 
-const runtimeServerURL =
-  "https://marlowe-runtime-preprod-web.demo.scdev.aws.iohkdev.io";
+const runtimeServerURL =process.env.NEXT_PUBLIC_RUNTIME!;
 
 export const AskForCoffee = () => {
   //initializing states

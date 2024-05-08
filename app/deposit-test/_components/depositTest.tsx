@@ -30,8 +30,7 @@ import { mkDepositContract } from "@/marlowe-contracts/mk-deposit-contract";
 import { parseADA } from "@/lib/utils";
 import { ApplyInputsRequest } from "@marlowe.io/runtime-lifecycle/api";
 
-const runtimeServerURL =
-  "https://marlowe-runtime-preprod-web.demo.scdev.aws.iohkdev.io";
+const runtimeServerURL = process.env.NEXT_PUBLIC_RUNTIME!;
 
 export const DepositTest = () => {
   //initializing states
@@ -56,6 +55,7 @@ export const DepositTest = () => {
     };
     run();
   }, []);
+  console.log(runtimeServerURL)
 
   //handling wallet connection
   const handleConnection = async (walletName: any) => {
