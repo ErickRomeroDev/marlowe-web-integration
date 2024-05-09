@@ -1,3 +1,5 @@
+import { TailorButton } from "@/components/tailor-button/tailorButton";
+import { WalletSelect } from "@/components/wallet-select";
 import Link from "next/link";
 
 export default function Home() {
@@ -10,6 +12,9 @@ export default function Home() {
       <Link href="/buy-coffee" className="cursor-pointer">
         Buy me a coffee
       </Link>
+      <TailorButton>
+        <WalletSelect />
+      </TailorButton>
     </div>
   );
 }
