@@ -5,10 +5,10 @@ import { useState, useEffect } from "react";
 
 const CardanoClientProvider = ({ children }: { children: React.ReactNode }) => {
   const [hasMounted, setHasMounted] = useState(false);  
-  const { loadWallets } = useCardanoStore();
+  const { loadWalletsExtensions } = useCardanoStore();
   
   useEffect(() => {    
-    loadWallets();
+    loadWalletsExtensions();
     setHasMounted(true);
   }, []);
 

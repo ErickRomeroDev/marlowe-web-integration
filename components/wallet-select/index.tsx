@@ -1,9 +1,6 @@
 "use client";
 
 import { type SupportedWalletName } from "@marlowe.io/wallet/browser";
-import { type RuntimeLifecycle } from "@marlowe.io/runtime-lifecycle/api";
-import { mkRuntimeLifecycle, type BrowserRuntimeLifecycleOptions } from "@marlowe.io/runtime-lifecycle/browser";
-import { mkRestClient, type RestClient } from "@marlowe.io/runtime-rest-client";
 import Image from "next/image";
 import { useEffect, useState } from "react";
 import { COLORS, ICON_SIZES } from "@/constants";
@@ -14,10 +11,8 @@ import { useCardanoStore } from "@/stores/cardano-store";
 
 export const WalletSelect = () => {
   const [openInfo, setOpenInfo] = useState(false);
-  const [loading, setLoading] = useState(true);  
-  const [runtimeLifecycle, setRuntimeLifecycle] = useState<RuntimeLifecycle | undefined>(undefined);
-  const [client, setClient] = useState<RestClient | undefined>(undefined);    
-  const { walletExtensions, loadWalletApi, walletAddress } = useCardanoStore();
+  const [loading, setLoading] = useState(true);       
+  const { walletExtensions, connectWallet, disconnectWallet } = useCardanoStore();  
 
   useEffect(() => {
     if (walletExtensions !== undefined) {
@@ -25,8 +20,8 @@ export const WalletSelect = () => {
     }
   }, [walletExtensions]); 
 
-  const handleSelectWallet = (walletName: SupportedWalletName) => async () => {    
-    await loadWalletApi(walletName);    
+  const handleSelectWallet = (wallet: SupportedWalletName) => async () => {    
+    await connectWallet(wallet);     
   };
 
   const toggleInfo = () => setOpenInfo((prev) => !prev);
@@ -78,10 +73,11 @@ export const WalletSelect = () => {
                 <TailorButton size={SIZE.SMALL} color={COLORS.BLUE} onClick={handleSelectWallet(wallet.name as SupportedWalletName)}>
                   <div className="flex items-center justify-center gap-2">
                     <Image src="/cardano.svg" alt={"C"} height={ICON_SIZES.XS} width={ICON_SIZES.XS} />
-                    <p className="font-normal text-black">Cardano</p>
+                    <p className="font-normal text-black">Connect</p>
                   </div>
                 </TailorButton>
               </div>
+              <div onClick={disconnectWallet} className="cursor-pointer">Disconnect</div>
             </div>
           );
         })}
