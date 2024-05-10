@@ -1,5 +1,6 @@
-import { TailorButton } from "@/components/tailor-button/tailorButton";
 import { WalletSelect } from "@/components/wallet-select";
+import CardanoClientOnly from "@/providers/cardano-client-provider";
+import ClientOnly from "@/providers/cardano-client-provider";
 import Link from "next/link";
 
 export default function Home() {
@@ -12,9 +13,8 @@ export default function Home() {
       <Link href="/buy-coffee" className="cursor-pointer">
         Buy me a coffee
       </Link>
-      <TailorButton>
-        <WalletSelect />
-      </TailorButton>
+
+      <WalletSelect />
     </div>
   );
 }
