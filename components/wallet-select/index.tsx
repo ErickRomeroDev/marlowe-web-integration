@@ -12,7 +12,7 @@ import { useCardanoStore } from "@/stores/cardano-store";
 export const WalletSelect = () => {
   const [openInfo, setOpenInfo] = useState(false);
   const [loading, setLoading] = useState(true);       
-  const { walletExtensions, connectWallet, disconnectWallet, balance } = useCardanoStore();  
+  const { walletExtensions, connectWallet, balance } = useCardanoStore();  
 
   useEffect(() => {
     if (walletExtensions !== undefined) {
@@ -29,7 +29,7 @@ export const WalletSelect = () => {
   if (loading || walletExtensions === undefined) {
     return (
       <div className="flex flex-grow items-center justify-center">
-        <Loading />
+        <Loading sizeDesktop={ICON_SIZES.S}/>
       </div>
     );
   }
@@ -76,8 +76,7 @@ export const WalletSelect = () => {
                     <p className="font-normal text-black">Connect</p>
                   </div>
                 </TailorButton>
-              </div>
-              <div onClick={disconnectWallet} className="cursor-pointer">Disconnect</div>              
+              </div>                       
             </div>
           );
         })}

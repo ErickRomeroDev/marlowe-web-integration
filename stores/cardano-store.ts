@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import { BroswerWalletExtension, SupportedWalletName } from "@marlowe.io/wallet/browser";
+import { BroswerWalletExtension, SupportedWalletName, getInstalledWalletExtensions } from "@marlowe.io/wallet/browser";
 import { walletsSupported } from "@/constants/wallets-supported";
 import { WalletAPI } from "@marlowe.io/wallet";
 import { createCookie } from "@/actions/set-cookies";
@@ -7,13 +7,15 @@ import { deleteCookie } from "@/actions/delete-cookies";
 import { IWalletInStorage } from "@/constants";
 
 interface CardanoState {
-  walletExtensions: BroswerWalletExtension[] | undefined;  
+  walletExtensions: BroswerWalletExtension[] | undefined;
+  walletExtensionSelected: BroswerWalletExtension | undefined;    
   walletApi: WalletAPI | undefined;
   walletName: SupportedWalletName | undefined;
   walletAddress: string | undefined;
   network: string | undefined;
   balance: number | undefined;
   setWalletExtensions: (wallets: BroswerWalletExtension[] | undefined) => void;  
+  setWalletExtensionSelected: (wallet: BroswerWalletExtension | undefined) => void;
   setWalletApi: (walletAPi: WalletAPI | undefined) => void;
   setWalletName: (walletName: SupportedWalletName | undefined) => void;
   setWalletAddress: (walletAddress: string | undefined) => void;
@@ -25,14 +27,16 @@ interface CardanoState {
 }
 
 export const useCardanoStore = create<CardanoState>((set, get) => ({
-  walletExtensions: undefined,  
+  walletExtensions: undefined, 
+  walletExtensionSelected: undefined,  
   walletApi: undefined,
   walletName: undefined,
   walletAddress: undefined,
   network: undefined,
   balance: undefined,
 
-  setWalletExtensions: (wallets) => set({ walletExtensions: wallets }),  
+  setWalletExtensions: (wallets) => set({ walletExtensions: wallets }),
+  setWalletExtensionSelected: (wallet) => set({ walletExtensionSelected: wallet }),   
   setWalletApi: (walletApi) => set({ walletApi }),
   setWalletName: (walletName) => set({ walletName }),
   setWalletAddress: (walletAddress) => set({ walletAddress }),
@@ -56,6 +60,9 @@ export const useCardanoStore = create<CardanoState>((set, get) => ({
       const walletAddress = await walletApi.getUsedAddresses();
       const network = await walletApi.isMainnet().then((result) => (result ? "mainnet" : "testnet"));
       const balance = await walletApi.getLovelaces().then((balance) => Number(balance) / 1000000);
+
+      const currentWalletExtensions = get().walletExtensions;
+      const walletExtensionSelected =  currentWalletExtensions?.find(item => item.name === walletName)
       const walletStorage: IWalletInStorage = {
         address: walletAddress[0],
         walletName: walletName.toLowerCase(),
@@ -74,6 +81,7 @@ export const useCardanoStore = create<CardanoState>((set, get) => ({
       get().setWalletAddress(walletAddress[0]);
       get().setNetwork(network);
       get().setBalance(balance);
+      get().setWalletExtensionSelected(walletExtensionSelected);
     } catch (error) {
       console.error("Failed to get Wallet API:");
     }
