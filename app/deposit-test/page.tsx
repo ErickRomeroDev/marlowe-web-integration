@@ -1,7 +1,14 @@
+import { getCookies } from "@/lib/get-cookies";
 import { DepositTest } from "./_components/depositTest";
 
 const Deposit = () => {
-  return <DepositTest />;
+  const { address, walletName, network, balance } = getCookies("walletInfo");
+  return (
+    <>
+      <DepositTest />
+      Address: {address}
+    </>
+  );
 };
 
 export default Deposit;

@@ -1,9 +1,10 @@
-import { WalletSelect } from "@/components/wallet-select";
-import CardanoClientOnly from "@/providers/cardano-client-provider";
-import ClientOnly from "@/providers/cardano-client-provider";
 import Link from "next/link";
+import { getCookies } from "@/lib/get-cookies";
 
-export default function Home() {
+export default function Home() {  
+
+  const {address, walletName, network, balance} = getCookies("walletInfo");
+
   return (
     <div className="flex flex-col">
       <div className="font-bold">This are the contracts available:</div>
@@ -12,9 +13,9 @@ export default function Home() {
       </Link>
       <Link href="/buy-coffee" className="cursor-pointer">
         Buy me a coffee
-      </Link>
+      </Link>   
 
-      <WalletSelect />
+      Status of the wallet from the server: {address ? `connected: ${address}` : "disconnected"}   
     </div>
   );
 }

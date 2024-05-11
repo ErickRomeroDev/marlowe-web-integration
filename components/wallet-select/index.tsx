@@ -12,7 +12,7 @@ import { useCardanoStore } from "@/stores/cardano-store";
 export const WalletSelect = () => {
   const [openInfo, setOpenInfo] = useState(false);
   const [loading, setLoading] = useState(true);       
-  const { walletExtensions, connectWallet, disconnectWallet } = useCardanoStore();  
+  const { walletExtensions, connectWallet, disconnectWallet, balance } = useCardanoStore();  
 
   useEffect(() => {
     if (walletExtensions !== undefined) {
@@ -59,7 +59,7 @@ export const WalletSelect = () => {
           )}
         </div>
       </div>
-      <p className="text-base text-m-disabled lg:text-lg">Please select a wallet to deploy a contract</p>
+      <p className="text-base text-m-disabled lg:text-lg">Please select a wallet to deploy a contract {balance}</p>
 
       <div className="flex flex-col gap-2 py-8">
         {walletExtensions.sort().map((wallet) => {
@@ -77,7 +77,7 @@ export const WalletSelect = () => {
                   </div>
                 </TailorButton>
               </div>
-              <div onClick={disconnectWallet} className="cursor-pointer">Disconnect</div>
+              <div onClick={disconnectWallet} className="cursor-pointer">Disconnect</div>              
             </div>
           );
         })}

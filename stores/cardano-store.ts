@@ -4,17 +4,16 @@ import { walletsSupported } from "@/constants/wallets-supported";
 import { WalletAPI } from "@marlowe.io/wallet";
 import { createCookie } from "@/actions/set-cookies";
 import { deleteCookie } from "@/actions/delete-cookies";
+import { IWalletInStorage } from "@/constants";
 
 interface CardanoState {
-  walletExtensions: BroswerWalletExtension[] | undefined;
-  message: string;
+  walletExtensions: BroswerWalletExtension[] | undefined;  
   walletApi: WalletAPI | undefined;
   walletName: SupportedWalletName | undefined;
   walletAddress: string | undefined;
   network: string | undefined;
   balance: number | undefined;
-  setWalletExtensions: (wallets: BroswerWalletExtension[] | undefined) => void;
-  setMessage: (message: string) => void;
+  setWalletExtensions: (wallets: BroswerWalletExtension[] | undefined) => void;  
   setWalletApi: (walletAPi: WalletAPI | undefined) => void;
   setWalletName: (walletName: SupportedWalletName | undefined) => void;
   setWalletAddress: (walletAddress: string | undefined) => void;
@@ -26,16 +25,14 @@ interface CardanoState {
 }
 
 export const useCardanoStore = create<CardanoState>((set, get) => ({
-  walletExtensions: undefined,
-  message: "Loading wallets...",
+  walletExtensions: undefined,  
   walletApi: undefined,
   walletName: undefined,
   walletAddress: undefined,
   network: undefined,
   balance: undefined,
 
-  setWalletExtensions: (wallets) => set({ walletExtensions: wallets }),
-  setMessage: (message) => set({ message }),
+  setWalletExtensions: (wallets) => set({ walletExtensions: wallets }),  
   setWalletApi: (walletApi) => set({ walletApi }),
   setWalletName: (walletName) => set({ walletName }),
   setWalletAddress: (walletAddress) => set({ walletAddress }),
@@ -46,11 +43,9 @@ export const useCardanoStore = create<CardanoState>((set, get) => ({
     try {
       const { getInstalledWalletExtensions } = await import("@marlowe.io/wallet");
       const installedWalletExtensions = getInstalledWalletExtensions().filter((item) => walletsSupported.includes(item.name.toLowerCase()));
-      get().setWalletExtensions(installedWalletExtensions);
-      get().setMessage("Wallets loaded successfully!");
+      get().setWalletExtensions(installedWalletExtensions);      
     } catch (error) {
-      console.error("Failed to load wallets:", error);
-      get().setMessage("Failed to load wallets.");
+      console.error("Failed to load wallets:", error);      
     }
   },
 
@@ -61,22 +56,18 @@ export const useCardanoStore = create<CardanoState>((set, get) => ({
       const walletAddress = await walletApi.getUsedAddresses();
       const network = await walletApi.isMainnet().then((result) => (result ? "mainnet" : "testnet"));
       const balance = await walletApi.getLovelaces().then((balance) => Number(balance) / 1000000);
+      const walletStorage: IWalletInStorage = {
+        address: walletAddress[0],
+        walletName: walletName.toLowerCase(),
+        network,
+        balance: Math.floor(balance).toString(),            
+      }
       if (walletAddress !== undefined) {
         window.localStorage.setItem(
           "walletInfo",
-          JSON.stringify({
-            address: walletAddress[0],
-            walletName: walletName.toLowerCase(),
-            network,
-            balance: Math.floor(balance).toString(),            
-          })
+          JSON.stringify(walletStorage)
         );
-        createCookie(JSON.stringify({
-          address: walletAddress[0],
-          walletName: walletName.toLowerCase(),
-          network,
-          balance: Math.floor(balance).toString(),            
-        }));
+        createCookie(JSON.stringify(walletStorage));
       }
       get().setWalletApi(walletApi);
       get().setWalletName(walletName);
@@ -84,7 +75,7 @@ export const useCardanoStore = create<CardanoState>((set, get) => ({
       get().setNetwork(network);
       get().setBalance(balance);
     } catch (error) {
-      console.error("Failed to get Wallet API:", error);
+      console.error("Failed to get Wallet API:");
     }
   },
 
