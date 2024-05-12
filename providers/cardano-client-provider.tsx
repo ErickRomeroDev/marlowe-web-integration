@@ -1,18 +1,19 @@
 "use client";
 
+import { WalletSelect } from "@/components/wallet-select";
 import { IWalletInStorage } from "@/constants";
 import { useCardanoStore } from "@/hooks/use-cardano-store";
 import { SupportedWalletName } from "@marlowe.io/wallet/browser";
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 
-const CardanoClientProvider = ({ children }: { children: React.ReactNode }) => {
+const CardanoClientProvider = () => {
   const [hasMounted, setHasMounted] = useState(false);
   const { loadWalletsExtensions, connectWallet } = useCardanoStore();
 
   useEffect(() => {
     const walletInfo = window.localStorage.getItem("walletInfo");
     if (walletInfo) {
-      const { address, walletName, network, balance } = JSON.parse(walletInfo) as IWalletInStorage;
+      const { walletName } = JSON.parse(walletInfo) as IWalletInStorage;
       connectWallet(walletName as SupportedWalletName);
     }
     loadWalletsExtensions();
@@ -23,7 +24,7 @@ const CardanoClientProvider = ({ children }: { children: React.ReactNode }) => {
     return null;
   }
 
-  return <div>{children}</div>;
+  return <WalletSelect/>;
 };
 
 export default CardanoClientProvider;
