@@ -29,8 +29,10 @@ import { useEffect, useState } from "react";
 import { mkDepositContract } from "@/marlowe-contracts/mk-deposit-contract";
 import { parseADA } from "@/lib/utils";
 import { ApplyInputsRequest } from "@marlowe.io/runtime-lifecycle/api";
+import { useRouter } from "next/navigation";
+import Link from "next/link";
 
-const runtimeServerURL = process.env.NEXT_PUBLIC_RUNTIME!;
+const runtimeServerURL = process.env.NEXT_PUBLIC_RUNTIME_PREPROD_INSTANCE!;
 
 export const DepositTest = () => {
   //initializing states
@@ -43,6 +45,7 @@ export const DepositTest = () => {
   const [token, setToken] = useState<Token[] | undefined>(undefined);
   const [bob, setBob] = useState<string>("");
   const [amt, setAmt] = useState<string>("");
+  const router = useRouter();
 
   //initialzing wallet extensions
   useEffect(() => {
@@ -231,6 +234,8 @@ export const DepositTest = () => {
         <Button type="submit">Deploy Smart Contract</Button>
       </form>
       <Button onClick={depositTx}>Deposit</Button>
+      <Link href="/">Go Back with Link</Link>
+      <div onClick={() => router.push("/")}>Go back with push</div>
     </div>
   );
 };

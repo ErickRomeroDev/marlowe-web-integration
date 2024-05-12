@@ -29,7 +29,7 @@ import { ApplyInputsRequest } from "@marlowe.io/runtime-lifecycle/api";
 import * as Contract from "@marlowe.io/runtime-rest-client/contract";
 import { mkRestClient } from "@marlowe.io/runtime-rest-client";
 
-const runtimeServerURL = process.env.NEXT_PUBLIC_RUNTIME!;
+const runtimeServerURL = process.env.NEXT_PUBLIC_RUNTIME_PREPROD_INSTANCE!;
 const restAPI = mkRestClient(runtimeServerURL);
 
 type ContractInfo = {

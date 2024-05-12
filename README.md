@@ -38,5 +38,7 @@ Smart Contracts that will be developed:
 | Smart Contract1      | Name1          |
 | Smart Contract2      | Name2          |
 
+## Features
+- Web3 Wallet (Nami, Eternl and Lace)
 
 [^1]: IOG is a blockchain company that was one of the founder entities that build Cardano.
