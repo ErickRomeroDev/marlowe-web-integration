@@ -4,7 +4,6 @@ import "./globals.css";
 import { ConvexClientProvider } from "@/providers/convex-client-provider";
 import CardanoClientProvider from "@/providers/cardano-client-provider";
 import { WalletWidget } from "@/components/wallet-widget";
-import { ClientTesting } from "@/components/clientTesting";
 import { WalletSelect } from "@/components/wallet-select";
 
 const inter = Inter({ subsets: ["latin"] });
@@ -23,11 +22,8 @@ export default function RootLayout({
     <html lang="en">
       <body className={inter.className}>
         <ConvexClientProvider>
-          <CardanoClientProvider>
-            <WalletWidget />
-            <WalletSelect/>
-            {/* <ClientTesting /> */}
-          </CardanoClientProvider>
+          <CardanoClientProvider/>
+          <WalletWidget />
           {children}
         </ConvexClientProvider>
       </body>

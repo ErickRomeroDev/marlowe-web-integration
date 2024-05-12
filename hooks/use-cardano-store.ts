@@ -16,8 +16,8 @@ interface CardanoState {
   walletAddress: string | undefined;
   network: string | undefined;
   balance: number | undefined;
-  // runtimeLifecycle: RuntimeLifecycle | undefined;
-  // restAPI: RestClient | undefined;
+  runtimeLifecycle: RuntimeLifecycle | undefined;
+  restAPI: RestClient | undefined;
   setWalletExtensions: (wallets: BroswerWalletExtension[] | undefined) => void;
   setWalletExtensionSelected: (wallet: BroswerWalletExtension | undefined) => void;
   setWalletApi: (walletAPi: WalletAPI | undefined) => void;
@@ -25,8 +25,8 @@ interface CardanoState {
   setWalletAddress: (walletAddress: string | undefined) => void;
   setNetwork: (network: string | undefined) => void;
   setBalance: (balance: number | undefined) => void;
-  // setRuntimeLifecycle: (runtimeLifecycle: RuntimeLifecycle | undefined) => void;
-  // setRestAPI: (restAPI: RestClient | undefined) => void;
+  setRuntimeLifecycle: (runtimeLifecycle: RuntimeLifecycle | undefined) => void;
+  setRestAPI: (restAPI: RestClient | undefined) => void;
   loadWalletsExtensions: () => Promise<void>;
   connectWallet: (walletName: SupportedWalletName) => Promise<void>;
   disconnectWallet: () => Promise<void>;
@@ -43,10 +43,9 @@ export const useCardanoStore = create<CardanoState>((set, get) => ({
   walletAddress: undefined,
   network: undefined,
   balance: undefined,
-  // runtimeLifecycle: undefined,
-  // restAPI: undefined,
+  runtimeLifecycle: undefined,
+  restAPI: undefined,
   isOpen: false,
-  
 
   setWalletExtensions: (wallets) => set({ walletExtensions: wallets }),
   setWalletExtensionSelected: (wallet) => set({ walletExtensionSelected: wallet }),
@@ -55,8 +54,8 @@ export const useCardanoStore = create<CardanoState>((set, get) => ({
   setWalletAddress: (walletAddress) => set({ walletAddress }),
   setNetwork: (network) => set({ network }),
   setBalance: (balance) => set({ balance }),
-  // setRuntimeLifecycle: (runtimeLifecycle) => set({ runtimeLifecycle }),
-  // setRestAPI: (restAPI) => set({restAPI}),
+  setRuntimeLifecycle: (runtimeLifecycle) => set({ runtimeLifecycle }),
+  setRestAPI: (restAPI) => set({ restAPI }),
   onOpen: () => set({ isOpen: true }),
   onClose: () => set({ isOpen: false }),
 
@@ -71,33 +70,24 @@ export const useCardanoStore = create<CardanoState>((set, get) => ({
   },
 
   connectWallet: async (walletName) => {
-    try {
+    try {      
       const { mkBrowserWallet } = await import("@marlowe.io/wallet");
-      const walletApi = await mkBrowserWallet(walletName);
+      const walletApi = await mkBrowserWallet(walletName.toLowerCase() as SupportedWalletName);
       const walletAddress = await walletApi.getUsedAddresses();
       const network = await walletApi.isMainnet().then((result) => (result ? "mainnet" : "testnet"));
       const balance = await walletApi.getLovelaces().then((balance) => Number(balance) / 1000000);
 
-      // connect to runtimeLifecycle and restAPI
-      // const { mkRuntimeLifecycle } = await import("@marlowe.io/runtime-lifecycle/browser");
+      const { mkRuntimeLifecycle } = await import("@marlowe.io/runtime-lifecycle/browser");
+      const runtimeLifecycle = await mkRuntimeLifecycle({
+        walletName: walletName.toLowerCase() as SupportedWalletName,
+        runtimeURL: process.env.NEXT_PUBLIC_RUNTIME_PREPROD_INSTANCE!,
+      });
 
-      // const runtimeLifecycle = await mkRuntimeLifecycle({
-      //   walletName: "nami",
-      //   runtimeURL: process.env.NEXT_PUBLIC_RUNTIME_PREPROD_INSTANCE!,
-      // });
-      // try {
-      //   const { mkRestClient } = await import("@marlowe.io/runtime-rest-client");
-      //   const restAPI = mkRestClient(process.env.NEXT_PUBLIC_RUNTIME_PREPROD_INSTANCE!);
-      //   const isHealthy = await restAPI.healthcheck();
-      //   console.log(isHealthy)
-      // } catch (error) {
-      //   console.log("error doing MKRESTCLIENT", error);
-      // }
-
-      // console.log(restAPI)
+      const { mkRestClient } = await import("@marlowe.io/runtime-rest-client");
+      const restAPI = mkRestClient(process.env.NEXT_PUBLIC_RUNTIME_PREPROD_INSTANCE!);      
 
       const currentWalletExtensions = get().walletExtensions;
-      const walletExtensionSelected = currentWalletExtensions?.find((item) => item.name === walletName);
+      const walletExtensionSelected = currentWalletExtensions?.find((item) => item.name.toLowerCase() === walletName.toLowerCase() as SupportedWalletName);
       const walletStorage: IWalletInStorage = {
         address: walletAddress[0],
         walletName: walletName.toLowerCase(),
@@ -109,13 +99,13 @@ export const useCardanoStore = create<CardanoState>((set, get) => ({
         createCookie(JSON.stringify(walletStorage));
       }
       get().setWalletApi(walletApi);
-      get().setWalletName(walletName);
+      get().setWalletName(walletName.toLowerCase() as SupportedWalletName);
       get().setWalletAddress(walletAddress[0]);
       get().setNetwork(network);
       get().setBalance(balance);
       get().setWalletExtensionSelected(walletExtensionSelected);
-      // get().setRuntimeLifecycle(runtimeLifecycle);
-      // get().setRestAPI(restAPI);
+      get().setRuntimeLifecycle(runtimeLifecycle);
+      get().setRestAPI(restAPI);
       get().onClose();
     } catch (error) {
       console.error("Failed to connect Wallet and load wallet State:");
