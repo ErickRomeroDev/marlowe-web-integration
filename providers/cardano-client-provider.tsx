@@ -1,7 +1,7 @@
 "use client";
 
 import { IWalletInStorage } from "@/constants";
-import { useCardanoStore } from "@/stores/cardano-store";
+import { useCardanoStore } from "@/hooks/use-cardano-store";
 import { SupportedWalletName } from "@marlowe.io/wallet/browser";
 import { useState, useEffect } from "react";
 

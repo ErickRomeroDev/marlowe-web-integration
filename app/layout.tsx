@@ -3,8 +3,9 @@ import { Inter } from "next/font/google";
 import "./globals.css";
 import { ConvexClientProvider } from "@/providers/convex-client-provider";
 import CardanoClientProvider from "@/providers/cardano-client-provider";
-import { WalletSelect } from "@/components/wallet-select";
 import { WalletWidget } from "@/components/wallet-widget";
+import { ClientTesting } from "@/components/clientTesting";
+import { WalletSelect } from "@/components/wallet-select";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -24,6 +25,8 @@ export default function RootLayout({
         <ConvexClientProvider>
           <CardanoClientProvider>
             <WalletWidget />
+            <WalletSelect/>
+            {/* <ClientTesting /> */}
           </CardanoClientProvider>
           {children}
         </ConvexClientProvider>

@@ -1,6 +1,6 @@
 import Image from "next/image";
 import { ICON_SIZES } from "@/constants";
-import { useCardanoStore } from "@/stores/cardano-store";
+import { useCardanoStore } from "@/hooks/use-cardano-store";
 
 export const DisconnectButton = () => {
   const { walletExtensions, connectWallet, disconnectWallet, balance } = useCardanoStore();

@@ -2,6 +2,7 @@
 
 import { action } from "./_generated/server";
 import { Blockfrost, Lucid } from "lucid-cardano";
+import { mkRestClient } from "@marlowe.io/runtime-rest-client";
 
 export const doSomething = action({
   handler: async () => {
@@ -19,3 +20,12 @@ export const doSomething = action({
     console.log(address)
   },
 });
+
+export const testMarlowe = action({
+  handler: async () => {
+    const restClient = mkRestClient(process.env.NEXT_PUBLIC_RUNTIME_PREPROD_INSTANCE!);
+    console.log(restClient)
+    const isHealthy = await restClient.healthcheck();
+    console.log(isHealthy)
+  }
+})

@@ -32,7 +32,7 @@ import { ApplyInputsRequest } from "@marlowe.io/runtime-lifecycle/api";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 
-const runtimeServerURL = process.env.NEXT_PUBLIC_RUNTIME!;
+const runtimeServerURL = process.env.NEXT_PUBLIC_RUNTIME_PREPROD_INSTANCE!;
 
 export const DepositTest = () => {
   //initializing states
