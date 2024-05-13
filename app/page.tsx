@@ -7,10 +7,10 @@ export default async function Home() {
   return (
     <div className="flex flex-col">
       <div className="font-bold">This are the contracts available:</div>
-      <Link href="/deposit-test" className="cursor-pointer">
+      <Link href="/marloweContracts/deposit-test" className="cursor-pointer">
         Deposit Test
       </Link>
-      <Link href="/buy-coffee" className="cursor-pointer">
+      <Link href="/marloweContracts/buy-coffee" className="cursor-pointer">
         Buy me a coffee
       </Link>
       Status of the wallet from the server: {address ? `connected: ${address}` : "disconnected"}      

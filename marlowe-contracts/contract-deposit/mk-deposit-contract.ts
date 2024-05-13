@@ -11,7 +11,7 @@ export const DEPOSIT_TAG = {
     flavour: "chocolate",
   },
 };
-// Contract template save as Gist (Deposit Test)
+
 export const mkDepositContract = (
   amtLovelace: number,
   alice: Party,
