@@ -56,7 +56,7 @@ restAPI: {
 applyInputsToContract(request: ApplyInputsToContractRequest): Promise<TransactionTextEnvelope>;
 buildCreateContractTx(request: BuildCreateContractTxRequest): Promise<BuildCreateContractTxResponse>;
 createContractSources(request: CreateContractSourcesRequest): Promise<CreateContractSourcesResponse>;
-getContractById(request: {contractId: ContractId}): Promise<ContractDetails>;
+getContractById(request: {contractId: ContractId}): Promise<ContractDetails_de_RESTAPI>;
 getContractSourceAdjacency(request: GetContractSourceAdjacencyRequest): Promise<GetContractSourceAdjacencyResponse>;
 getContractSourceById(request: GetContractBySourceIdRequest): Promise<Contract>;
 getContractSourceClosure(request: GetContractSourceClosureRequest): Promise<GetContractSourceClosureResponse>;
@@ -80,6 +80,16 @@ withdrawPayouts(request: WithdrawPayoutsRequest): Promise<{ tx: TextEnvelope; wi
 GetContractsResponse: {
 contracts: ContractHeader[];
 page: Page
+}
+
+ContractHeader: {
+block: Option<BlockHeader>;
+contractId: ContractId;
+metadata: Metadata;
+roleTokenMintingPolicyId: Branded<string, PolicyIdBrand>;
+status: "unsigned" | "submitted" | "confirmed";
+tags: Tags;
+version: "v1"
 }
 
 GetContractsRequest: {
@@ -125,6 +135,22 @@ currentContract: Contract;
 currentState: MarloweState;
 roleTokenMintingPolicyId: PolicyId;
 type: "active";
+}
+
+ContractDetails_de_RESTAPI: {
+    block?: BlockHeader;
+    contractId: ContractId;
+    currentContract?: Contract;
+    initialContract: Contract;
+    metadata: Metadata;
+    roleTokenMintingPolicyId: Branded<string, PolicyIdBrand>;
+    state?: MarloweState;
+    status: "unsigned" | "submitted" | "confirmed";
+    tags: Tags;
+    txBody?: TextEnvelope;
+    unclaimedPayouts: {payoutId:TxOutRef; role: string;}[];
+    utxo?: TxOutRef;
+    version: "v1"
 }
 
 ApplicableAction: CanNotify | CanDeposit | CanChoose | CanAdvance

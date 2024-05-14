@@ -14,7 +14,7 @@ export default async function Home() {
         <Link href="/marloweContracts/buy-coffee" className="cursor-pointer">
           2. Buy me a coffee
         </Link>
-      </div>      
+      </div>        
     </div>
   );
 }

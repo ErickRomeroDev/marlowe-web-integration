@@ -5,7 +5,7 @@ const BuyCoffee = () => {
   return (
     <div className="space-y-8">
       <AskForCoffee />
-      {/* <CoffeesToFund /> */}
+      <CoffeesToFund />
     </div>
   );
 };

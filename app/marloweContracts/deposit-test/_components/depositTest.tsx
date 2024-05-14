@@ -6,7 +6,6 @@ import { Party } from "@marlowe.io/language-core-v1";
 import { AddressBech32, ContractId } from "@marlowe.io/runtime-core";
 import { useState } from "react";
 import { deposit_tag, mkDepositContract } from "@/marlowe-contracts/contract-deposit/mk-deposit-contract";
-import { ActiveContract } from "@marlowe.io/runtime-lifecycle/api";
 import { useCardanoStore } from "@/hooks/use-cardano-store";
 
 export const DepositTest = () => {
@@ -42,14 +41,16 @@ export const DepositTest = () => {
   const depositTx = async () => {
     if (contractId && runtimeLifecycle) {
       const contractInstanceAPI = await runtimeLifecycle.newContractAPI.load(contractId);
-      const contractDetails = await contractInstanceAPI.getDetails() as ActiveContract;
-      const [applicableAction] = await runtimeLifecycle.applicableActions.getApplicableActions(contractDetails);
-      if (applicableAction.type !== "Choice") {
-        const applicableInput = await runtimeLifecycle.applicableActions.getInput(contractDetails, applicableAction);
-        const txId = await contractInstanceAPI.applyInput({ input: applicableInput });
-        console.log(`transaction submited ok ${txId}`)
+      const contractDetails = await contractInstanceAPI.getDetails();
+      if (contractDetails.type === "active") {
+        const [applicableAction] = await runtimeLifecycle.applicableActions.getApplicableActions(contractDetails);
+        if (applicableAction.type !== "Choice") {
+          const applicableInput = await runtimeLifecycle.applicableActions.getInput(contractDetails, applicableAction);
+          const txId = await contractInstanceAPI.applyInput({ input: applicableInput });
+          console.log(`transaction submited ok ${txId}`);
+        }
       }
-    }    
+    }
   };
 
   return (
