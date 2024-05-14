@@ -5,15 +5,16 @@ export default async function Home() {
   const { address, walletName, network, balance } = getCookies("walletInfo");
 
   return (
-    <div className="flex flex-col">
-      <div className="font-bold">This are the contracts available:</div>
-      <Link href="/marloweContracts/deposit-test" className="cursor-pointer">
-        Deposit Test
-      </Link>
-      <Link href="/marloweContracts/buy-coffee" className="cursor-pointer">
-        Buy me a coffee
-      </Link>
-      Status of the wallet from the server: {address ? `connected: ${address}` : "disconnected"}      
+    <div className="py-4">
+      <div className="space-y-1 flex flex-col">
+        <div className="font-bold">Contracts available ({address ? "connected" : "disconnected"}):</div>
+        <Link href="/marloweContracts/deposit-test" className="cursor-pointer">
+          1. Deposit Test
+        </Link>
+        <Link href="/marloweContracts/buy-coffee" className="cursor-pointer">
+          2. Buy me a coffee
+        </Link>
+      </div>      
     </div>
   );
 }

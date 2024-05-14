@@ -1,17 +1,6 @@
 "use client";
 
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import {
-  POLLING_INTERVAL,
-  walletsSupported,
-} from "@/constants/wallets-supported";
-import {
   Input,
   IDeposit,
   Environment,
@@ -19,18 +8,11 @@ import {
 } from "@marlowe.io/language-core-v1";
 import { Deposit } from "@marlowe.io/language-core-v1/next";
 import { ContractId } from "@marlowe.io/runtime-core";
-import {
-  BroswerWalletExtension,
-  SupportedWalletName,
-} from "@marlowe.io/wallet/browser";
 import { useEffect, useState } from "react";
 import { delay} from "@/lib/utils";
 import { ApplyInputsRequest } from "@marlowe.io/runtime-lifecycle/api";
 import * as Contract from "@marlowe.io/runtime-rest-client/contract";
-import { mkRestClient } from "@marlowe.io/runtime-rest-client";
-
-const runtimeServerURL = process.env.NEXT_PUBLIC_RUNTIME_PREPROD_INSTANCE!;
-const restAPI = mkRestClient(runtimeServerURL);
+import { useCardanoStore } from "@/hooks/use-cardano-store";
 
 type ContractInfo = {
   contractHeader: Contract.ContractHeader;
@@ -39,44 +21,16 @@ type ContractInfo = {
 };
 
 export const CoffeesToFund = () => {
-  //initializing states
-  const [extension, setExtension] = useState<BroswerWalletExtension[]>([]);
-  const [amount, setAmount] = useState<bigint | undefined>(undefined);
-  const [wallet, setWallet] = useState<SupportedWalletName | undefined>(
-    undefined
-  );
-  const [contractInfos, setContractInfos] = useState<ContractInfo[]>([]);
+  const { restAPI } = useCardanoStore();
 
-  //initialzing wallet extensions
-  useEffect(() => {
-    const run = async () => {
-      const { getInstalledWalletExtensions } = await import(
-        "@marlowe.io/wallet"
-      );
-      const installedWalletExtensions = getInstalledWalletExtensions();
-      setExtension(installedWalletExtensions);
-    };
-    run();
-  }, []);
+  //initializing states  
+  const [amount, setAmount] = useState<bigint | undefined>(undefined);  
+  const [contractInfos, setContractInfos] = useState<ContractInfo[]>([]);  
 
   //get contract Info
   useEffect(() => {
     const shouldUpdateRef = { current: true };
-    const run = async () => {
-      if (wallet !== undefined) {
-        // connect to runtime instance
-        const { mkRuntimeLifecycle } = await import(
-          "@marlowe.io/runtime-lifecycle/browser"
-        );
-        const runtimeLifecycle = await mkRuntimeLifecycle({
-          walletName: wallet!,
-          runtimeURL: runtimeServerURL,
-        });
-
-        const walletAddresses =
-          await runtimeLifecycle.wallet.getUsedAddresses();
-        const changeAddress = await runtimeLifecycle.wallet.getChangeAddress();
-        walletAddresses.push(changeAddress);
+    const run = async () => {  
 
         const contractsRequest: Contract.GetContractsRequest = {
           tags: ["buy-me-a-coffee-sponsor"],
@@ -125,12 +79,12 @@ export const CoffeesToFund = () => {
           )
         );
         setContractInfos(contractInfos);
-        await delay(POLLING_INTERVAL);
+        await delay(3000000);
         if (shouldUpdateRef.current) {
           run();
         }
       }
-    };
+    
     run();
     return () => {
       shouldUpdateRef.current = false;
@@ -163,36 +117,7 @@ export const CoffeesToFund = () => {
 
   return (
     <div className="">
-      <div>Sponsor:</div>
-      <div>Select Wallet:</div>
-      <Select onValueChange={handleConnection}>
-        <SelectTrigger className="w-[180px]">
-          <SelectValue placeholder="" defaultValue={wallet} />
-        </SelectTrigger>
-        <SelectContent>
-          {extension.length > 0 &&
-            wallet === undefined &&
-            extension
-              .filter((item) =>
-                walletsSupported.includes(item.name.toLowerCase())
-              )
-              .map((item, index) => (
-                <SelectItem key={index} value={item.name}>
-                  {item.name}
-                </SelectItem>
-              ))}
-          {wallet !== undefined && (
-            <>
-              <SelectItem value="disconnect">Disconnect</SelectItem>
-            </>
-          )}
-        </SelectContent>
-      </Select>
-      {amount !== undefined && (
-        <div>
-          <div>Amount: {(Number(amount) / 1000000).toFixed(2).toString()}</div>
-        </div>
-      )}
+      <div>Sponsor:</div> 
 
       {contractInfos.length === 0 ? (
         <p>No coffees to fund</p>
