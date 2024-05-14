@@ -1,4 +1,5 @@
 runtimeLifecycle.applicableActions: {
+computeEnvironment: ((contract: Contract) => Promise<Environment>)
 getApplicableActions(contractDetails: ContractDetails, environment?: Environment): Promise<ApplicableAction[]>;
 getInput(contractDetails: ActiveContract, action: CanNotify | CanDeposit | CanAdvance): Promise<ApplicableInput>;
 getInput(contractDetails: ActiveContract, action: CanChoose, chosenNum: bigint): Promise<ApplicableInput>;
@@ -31,10 +32,6 @@ withdraw(payoutIds: PayoutId[]): Promise<void>;
 withdrawn(filters?: Filters): Promise<CustomWithdrawn[]>
 }
 
-runtimeLifecycle.restAPI: {
-  <!-- i did not include all the details, but they are in the documentation -->
-}
-
 ContractInstanceAPI: {
 getDetails: (() => Promise<ContractDetails>);
 id: ContractId;
@@ -55,11 +52,56 @@ toInput(action: CanNotify | CanDeposit | CanAdvance): Promise<ApplicableInput>;
 toInput(action: CanChoose, chosenNum: bigint): Promise<ApplicableInput>
 }
 
+restAPI: {
+applyInputsToContract(request: ApplyInputsToContractRequest): Promise<TransactionTextEnvelope>;
+buildCreateContractTx(request: BuildCreateContractTxRequest): Promise<BuildCreateContractTxResponse>;
+createContractSources(request: CreateContractSourcesRequest): Promise<CreateContractSourcesResponse>;
+getContractById(request: {contractId: ContractId}): Promise<ContractDetails_de_RESTAPI>;
+getContractSourceAdjacency(request: GetContractSourceAdjacencyRequest): Promise<GetContractSourceAdjacencyResponse>;
+getContractSourceById(request: GetContractBySourceIdRequest): Promise<Contract>;
+getContractSourceClosure(request: GetContractSourceClosureRequest): Promise<GetContractSourceClosureResponse>;
+getContractTransactionById(request: GetContractTransactionByIdRequest): Promise<TransactionDetails>
+getContracts(request?: GetContractsRequest): Promise<GetContractsResponse>;
+getNextStepsForContract(request: {contractId, parties, validityStart, validityEnd}): Promise<{ApplicableInputs, can_reduce}>;
+getPayoutById(request: {PayoutId}): Promise<GetPayoutByIdResponse>;
+getPayouts(request: {ContractId[], ItemRange, AssetId[], PayoutStatus}): Promise<GetPayoutsResponse>;
+getTransactionsForContract(request: {ContractId, range}): Promise<GetTransactionsForContractResponse>;
+getWithdrawalById(request: {withdrawalId}): Promise<GetWithdrawalByIdResponse>
+getWithdrawals(request?: {AssetId[]}): Promise<withdrawals...>;
+healthcheck(): Promise<RuntimeStatus>
+submitContract(request: {ContractId, TextEnvelope}): Promise<void>;
+submitContractTransaction(request: {ContractId, transactionId, hexTransactionWitnessSet}): Promise<void>
+submitWithdrawal(request: {withdrawalId, hexTransactionWitnessSet}): Promise<void>;
+withdrawPayouts(request: WithdrawPayoutsRequest): Promise<{ tx: TextEnvelope; withdrawalId: WithdrawalId}>
+}
+
 ---
 
+GetContractsResponse: {
+contracts: ContractHeader[];
+page: Page
+}
+
+ContractHeader: {
+block: Option<BlockHeader>;
+contractId: ContractId;
+metadata: Metadata;
+roleTokenMintingPolicyId: Branded<string, PolicyIdBrand>;
+status: "unsigned" | "submitted" | "confirmed";
+tags: Tags;
+version: "v1"
+}
+
+GetContractsRequest: {
+partyAddresses?: Branded<string, AddressBech32Brand>[];
+partyRoles?: { assetName: string; policyId: Branded<string, PolicyIdBrand>}[];
+range?: Branded<string, ItemRangeBrand>;
+tags?: string[]
+}
+
 Filters: {
-    byContractIds: ContractId[];
-    byMyRoleTokens: ((myRolesOnWallet) => AssetId[]);
+byContractIds: ContractId[];
+byMyRoleTokens: ((myRolesOnWallet) => AssetId[]);
 }
 
 CustomAvailable: {
@@ -72,13 +114,13 @@ role: { policyId: Branded<string, PolicyIdBrand>; assetName: string; };
 }
 
 CustomWithdrawn: {
-    assets: ({ tokens: { quantity: bigint; assetId: { policyId: Branded<string, PolicyIdBrand>; assetName: string; }; }[]; }) & {
-        lovelaces?: bigint;
-    };
-    contractId: Branded<string, ContractIdBrand>;
-    payoutId: PayoutId;
-    role: { policyId: Branded<string, PolicyIdBrand>; assetName: string; };
-    withdrawalId: WithdrawalId;
+assets: ({ tokens: { quantity: bigint; assetId: { policyId: Branded<string, PolicyIdBrand>; assetName: string; }; }[]; }) & {
+lovelaces?: bigint;
+};
+contractId: Branded<string, ContractIdBrand>;
+payoutId: PayoutId;
+role: { policyId: Branded<string, PolicyIdBrand>; assetName: string; };
+withdrawalId: WithdrawalId;
 }
 
 ContractDetails: ClosedContract | ActiveContract
@@ -93,6 +135,22 @@ currentContract: Contract;
 currentState: MarloweState;
 roleTokenMintingPolicyId: PolicyId;
 type: "active";
+}
+
+ContractDetails_de_RESTAPI: {
+    block?: BlockHeader;
+    contractId: ContractId;
+    currentContract?: Contract;
+    initialContract: Contract;
+    metadata: Metadata;
+    roleTokenMintingPolicyId: Branded<string, PolicyIdBrand>;
+    state?: MarloweState;
+    status: "unsigned" | "submitted" | "confirmed";
+    tags: Tags;
+    txBody?: TextEnvelope;
+    unclaimedPayouts: {payoutId:TxOutRef; role: string;}[];
+    utxo?: TxOutRef;
+    version: "v1"
 }
 
 ApplicableAction: CanNotify | CanDeposit | CanChoose | CanAdvance

@@ -5,7 +5,7 @@ import {
   datetoTimeout,
 } from "@marlowe.io/language-core-v1";
 
-export const DEPOSIT_TAG = {
+export const deposit_tag = {
   "buy-me-a-coffee-sponsor": {
     size: "medium",
     flavour: "chocolate",
