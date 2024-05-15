@@ -31,12 +31,12 @@ const demoContract: Contract = {
   };
 ```
 
-Smart Contracts that will be developed: 
+Smart Contracts being developed: 
 
 | Name                 | Description    |
 | -------------------- | ---------------|
-| Smart Contract1      | Name1          |
-| Smart Contract2      | Name2          |
+| Deposit              | simple deposit |
+| Buy me a Coffee      | ask for sponsor|
 
 ## Features
 - Web3 Wallet (Nami, Eternl and Lace)
