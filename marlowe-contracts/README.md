@@ -9,6 +9,9 @@ npx tsc --init
 npx ts-jest config:init
 
 <!-- Configure packageJson scripts and configs, tsconfig.json (Folder setup --dist---src) -->
+
+<!-- create an .env file -->
+
 <!-- running the project -->
 npm run build
 npm run start

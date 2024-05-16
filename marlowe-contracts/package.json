@@ -5,6 +5,7 @@
   "scripts": {
     "build": "tsc",
     "deposit-contract": "npx tsc && node dist/src/contract-depositv2/deposit-contract.js",
+    "marlowe-object": "npx tsc && node dist/src/marlowe-object/marlowe-object-flow.js",
     "test": "jest",
     "test:deposit-contract": "jest src/contract-depositv2/deposit-contract.test.ts"
   },
@@ -31,6 +32,12 @@
     "typescript": "^5.4.5"
   },
   "dependencies": {
-    "@marlowe.io/language-core-v1": "^0.4.0-beta"
+    "@inquirer/prompts": "^5.0.3",
+    "@marlowe.io/language-core-v1": "^0.4.0-beta",
+    "@marlowe.io/marlowe-template": "^0.4.0-beta",
+    "@marlowe.io/runtime-core": "^0.4.0-beta",
+    "@marlowe.io/runtime-lifecycle": "^0.4.0-beta",
+    "dotenv": "^16.4.5",
+    "lucid-cardano": "^0.10.7"
   }
 }

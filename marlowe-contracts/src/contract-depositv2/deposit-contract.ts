@@ -5,6 +5,8 @@ import {
   datetoTimeout,
 } from "@marlowe.io/language-core-v1";
 
+
+
 export const deposit_tag = {
   "buy-me-a-coffee-sponsor": {
     size: "medium",
@@ -37,7 +39,9 @@ export const mkDepositContract = (
     ],
     timeout_continuation: "close",
     timeout: inTwentyFourHours,
-  };
+  };  
   return demoContract;
 };
+
+
 
