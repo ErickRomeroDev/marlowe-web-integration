@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Party } from "@marlowe.io/language-core-v1";
 import { AddressBech32 } from "@marlowe.io/runtime-core";
 import { useState } from "react";
-import { deposit_tag, mkDepositContract } from "@/marlowe-contracts/contract-deposit/mk-deposit-contract";
+import { deposit_tag, mkDepositContract } from "@/marlowe-contracts/src/contract-deposit/mk-deposit-contract";
 import { useCardanoStore } from "@/hooks/use-cardano-store";
 
 export const AskForCoffee = () => {
