@@ -33,7 +33,7 @@ export function positiveBigIntValidator(value: string) {
 
   /**
  * This is an Inquirer.js validator for dates in the future
- * '2024-05-16T20:10:00-03:00'
+ * '2024-05-17T06:06:00-03:00'
  * @returns true if the value is a date in the future, or a string with the error message otherwise
  */
 export function dateInFutureValidator(value: string) {

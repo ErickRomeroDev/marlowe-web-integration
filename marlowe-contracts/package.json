@@ -5,7 +5,7 @@
   "scripts": {
     "build": "tsc",
     "deposit-contract": "npx tsc && node dist/src/contract-depositv2/deposit-contract.js",
-    "marlowe-object": "npx tsc && node dist/src/marlowe-object/marlowe-object-flow.js",
+    "delay-payment": "npx tsc && node dist/src/delay-payment/delay-payment-flow.js",
     "test": "jest",
     "test:deposit-contract": "jest src/contract-depositv2/deposit-contract.test.ts"
   },

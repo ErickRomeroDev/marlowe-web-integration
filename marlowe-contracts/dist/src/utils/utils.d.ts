@@ -12,7 +12,7 @@ export declare function bech32Validator(value: string): true | "Invalid address"
 export declare function positiveBigIntValidator(value: string): true | "The amount must be greater than 0" | "The amount must be a number";
 /**
 * This is an Inquirer.js validator for dates in the future
-* 'YYYY-MM-DDTHH:mm:ss-03:00'
+* '2024-05-17T06:06:00-03:00'
 * @returns true if the value is a date in the future, or a string with the error message otherwise
 */
 export declare function dateInFutureValidator(value: string): true | "Invalid date" | "The date must be in the future";
