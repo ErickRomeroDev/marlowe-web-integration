@@ -1,5 +1,6 @@
 import { StakeAddressBech32 } from "@marlowe.io/runtime-core";
 import { RuntimeLifecycle } from "@marlowe.io/runtime-lifecycle/api";
+export declare function downloadMenu(lifecycleNami: RuntimeLifecycle): Promise<void>;
 /**
  * This is an Inquirer.js flow to create a contract
  * @param lifecycle An instance of the RuntimeLifecycle

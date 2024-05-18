@@ -9,7 +9,7 @@ import { SingleInputTx } from "@marlowe.io/language-core-v1/semantics";
 import * as ObjG from "@marlowe.io/marlowe-object/guards";
 import * as t from "io-ts/lib/index.js";
 
-export const fundMyProjectTag: Tags = { "FUND_MY_PROJECT_VERSION_1": {}, "FILTER-VERSION_1": { contracts: "normal", vcs: "registered" } };
+export const fundMyProjectTag: Tags = { FUND_MY_PROJECT_VERSION_2: {}, "FILTER-VERSION_1": { contracts: "normal", vcs: "registered" } };
 
 export type FundMyProjectParameters = TemplateParametersOf<typeof fundMyProjectTemplate>;
 export type FundMyProjectAnnotations = "initialDeposit" | "PaymentMissedClose" | "PaymentReleasedClose";

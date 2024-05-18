@@ -1,3 +1,5 @@
+FILTROS GETCONTRACT => [TAG1 || TAG2 || TAG3 ...] && [Address1 || Address2 || Address3 ...] && ?? [roles ??]
+
 runtimeLifecycle.applicableActions: {
 computeEnvironment: ((contract: Contract) => Promise<Environment>)
 getApplicableActions(contractDetails: ContractDetails, environment?: Environment): Promise<ApplicableAction[]>;

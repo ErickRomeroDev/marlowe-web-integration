@@ -4,7 +4,7 @@ import { datetoTimeout } from "@marlowe.io/language-core-v1";
 import { mkSourceMap } from "../utils/experimental-features/source-map.js";
 import * as ObjG from "@marlowe.io/marlowe-object/guards";
 import * as t from "io-ts/lib/index.js";
-export const fundMyProjectTag = { "FUND_MY_PROJECT_VERSION_1": {}, "FILTER-VERSION_1": { contracts: "normal", vcs: "registered" } };
+export const fundMyProjectTag = { FUND_MY_PROJECT_VERSION_2: {}, "FILTER-VERSION_1": { contracts: "normal", vcs: "registered" } };
 const FundMyProjectAnnotationsGuard = t.union([
     t.literal("initialDeposit"),
     t.literal("PaymentMissedClose"),
