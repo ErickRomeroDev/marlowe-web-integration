@@ -1,6 +1,13 @@
 import { Blockfrost, Lucid } from "lucid-cardano";
 import { readConfig } from "../../config.js";
-import { StakeAddressBech32, addressBech32, contractId, contractIdToTxId, stakeAddressBech32 } from "@marlowe.io/runtime-core";
+import {
+  AddressBech32,
+  StakeAddressBech32,
+  addressBech32,
+  contractId,
+  contractIdToTxId,
+  stakeAddressBech32,
+} from "@marlowe.io/runtime-core";
 import { WalletAPI, mkLucidWallet } from "@marlowe.io/wallet";
 import { mkRuntimeLifecycle } from "@marlowe.io/runtime-lifecycle";
 import { CanAdvance, CanDeposit, ContractInstanceAPI, RuntimeLifecycle } from "@marlowe.io/runtime-lifecycle/api";
@@ -19,6 +26,7 @@ import {
   fundMyProjectValidation,
   mkFundMyProject,
 } from "./fund-my-project.js";
+import { GetContractsRequest } from "@marlowe.io/runtime-rest-client/contract";
 
 // When this script is called, start with main.
 main();
@@ -62,6 +70,7 @@ async function mainLoop(lifecycleNami: RuntimeLifecycle, lifecycleLace: RuntimeL
         choices: [
           { name: "Create a contract", value: "create" },
           { name: "Load a contract", value: "load" },
+          { name: "See contracts", value: "download" },
           { name: "Exit", value: "exit" },
         ],
       });
@@ -71,6 +80,9 @@ async function mainLoop(lifecycleNami: RuntimeLifecycle, lifecycleLace: RuntimeL
           break;
         case "load":
           await loadContractMenu(lifecycleLace, lifecycleNami);
+          break;
+        case "download":
+          await downloadMenu(lifecycleNami);
           break;
         case "exit":
           process.exit(0);
@@ -89,12 +101,48 @@ async function mainLoop(lifecycleNami: RuntimeLifecycle, lifecycleLace: RuntimeL
   }
 }
 
+export async function downloadMenu(lifecycleNami: RuntimeLifecycle) {
+  const tags_array = ["FUND_MY_PROJECT_VERSION_2", "FILTER-VERSION_2"];
+  const [walletAddress] = await lifecycleNami.wallet.getUsedAddresses();
+  const contractsRequest: GetContractsRequest = {
+    tags: tags_array,
+    partyAddresses: [walletAddress] as AddressBech32[],
+  };
+  const contractHeaders = await lifecycleNami.restClient.getContracts(contractsRequest);
+  await Promise.all(
+    contractHeaders.contracts.map(async (item) => {
+      try {
+        const result = await fundMyProjectValidation(lifecycleNami, item.contractId);
+        if (result === "InvalidMarloweTemplate" || result === "InvalidContract") {
+          throw new Error("invalid");
+        }
+        const contractInstance = await lifecycleNami.newContractAPI.load(item.contractId);
+        const inputHistory = await contractInstance.getInputHistory();
+        const contractState = fundMyProjectGetState(datetoTimeout(new Date()), inputHistory, result.sourceMap);
+        console.log("contractState", contractState)
+        if(contractState.type !== "Closed") {
+          fundMyProjectPrintState(contractState, result.scheme);
+          const applicableActions = await contractInstance.evaluateApplicableActions();
+          const choices = fundMyProjectGetActions(applicableActions, contractState);
+          console.log("choices", choices)
+        }
+      } catch (error) {
+        console.log("error", error);
+      }
+    })
+  );
+}
+
 /**
  * This is an Inquirer.js flow to create a contract
  * @param lifecycle An instance of the RuntimeLifecycle
  * @param rewardAddress An optional reward address to stake the contract rewards
  */
-export async function createContractMenu(lifecycleNami: RuntimeLifecycle, lifecycleLace: RuntimeLifecycle, rewardAddress?: StakeAddressBech32) {
+export async function createContractMenu(
+  lifecycleNami: RuntimeLifecycle,
+  lifecycleLace: RuntimeLifecycle,
+  rewardAddress?: StakeAddressBech32
+) {
   const payer = addressBech32(
     await input({
       message: "Enter the VC address",
@@ -210,7 +258,7 @@ async function contractMenu(
   fundMyProjectPrintState(contractState, scheme);
   // See what actions are applicable to the current contract state
   const applicableActions = await contractInstance.evaluateApplicableActions();
-//   console.log({ applicableActions });
+  //   console.log({ applicableActions });
 
   const choices = fundMyProjectGetActions(applicableActions, contractState);
 

@@ -1,6 +1,6 @@
 import { Blockfrost, Lucid } from "lucid-cardano";
 import { readConfig } from "../../config.js";
-import { addressBech32, contractId, contractIdToTxId, stakeAddressBech32 } from "@marlowe.io/runtime-core";
+import { addressBech32, contractId, contractIdToTxId, stakeAddressBech32, } from "@marlowe.io/runtime-core";
 import { mkLucidWallet } from "@marlowe.io/wallet";
 import { mkRuntimeLifecycle } from "@marlowe.io/runtime-lifecycle";
 import { input, select } from "@inquirer/prompts";
@@ -47,6 +47,7 @@ async function mainLoop(lifecycleNami, lifecycleLace, rewardAddress) {
                 choices: [
                     { name: "Create a contract", value: "create" },
                     { name: "Load a contract", value: "load" },
+                    { name: "See contracts", value: "download" },
                     { name: "Exit", value: "exit" },
                 ],
             });
@@ -56,6 +57,9 @@ async function mainLoop(lifecycleNami, lifecycleLace, rewardAddress) {
                     break;
                 case "load":
                     await loadContractMenu(lifecycleLace, lifecycleNami);
+                    break;
+                case "download":
+                    await downloadMenu(lifecycleNami);
                     break;
                 case "exit":
                     process.exit(0);
@@ -74,6 +78,36 @@ async function mainLoop(lifecycleNami, lifecycleLace, rewardAddress) {
             throw e;
         }
     }
+}
+export async function downloadMenu(lifecycleNami) {
+    const tags_array = ["FUND_MY_PROJECT_VERSION_2", "FILTER-VERSION_2"];
+    const [walletAddress] = await lifecycleNami.wallet.getUsedAddresses();
+    const contractsRequest = {
+        tags: tags_array,
+        partyAddresses: [walletAddress],
+    };
+    const contractHeaders = await lifecycleNami.restClient.getContracts(contractsRequest);
+    await Promise.all(contractHeaders.contracts.map(async (item) => {
+        try {
+            const result = await fundMyProjectValidation(lifecycleNami, item.contractId);
+            if (result === "InvalidMarloweTemplate" || result === "InvalidContract") {
+                throw new Error("invalid");
+            }
+            const contractInstance = await lifecycleNami.newContractAPI.load(item.contractId);
+            const inputHistory = await contractInstance.getInputHistory();
+            const contractState = fundMyProjectGetState(datetoTimeout(new Date()), inputHistory, result.sourceMap);
+            console.log("contractState", contractState);
+            if (contractState.type !== "Closed") {
+                fundMyProjectPrintState(contractState, result.scheme);
+                const applicableActions = await contractInstance.evaluateApplicableActions();
+                const choices = fundMyProjectGetActions(applicableActions, contractState);
+                console.log("choices", choices);
+            }
+        }
+        catch (error) {
+            console.log("error", error);
+        }
+    }));
 }
 /**
  * This is an Inquirer.js flow to create a contract
