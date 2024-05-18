@@ -75,7 +75,23 @@ submitWithdrawal(request: {withdrawalId, hexTransactionWitnessSet}): Promise<voi
 withdrawPayouts(request: WithdrawPayoutsRequest): Promise<{ tx: TextEnvelope; withdrawalId: WithdrawalId}>
 }
 
+mkSourceMap<T>(lifecycle: RuntimeLifecycle, sourceObjectMap: ContractBundleMap<T>): Promise<SourceMap<T>>
+
 ---
+
+SourceMap<T>: {
+source: ContractBundleMap;
+closure: ContractClosure;
+annotateHistory(history: SingleInputTx[]): SingleInputTx[];
+playHistory <Annotated> (history: SingleInputTx[]): TransactionOutput;
+createContract(options: CreateContractRequestBase): Promise<ContractInstanceAPI>;
+contractInstanceOf(contractId: ContractId): Promise<boolean>;
+}
+
+ContractClosure <Annotated>: {  
+main: string;
+contracts: Map<string, Contract>;
+}
 
 GetContractsResponse: {
 contracts: ContractHeader[];
@@ -138,19 +154,19 @@ type: "active";
 }
 
 ContractDetails_de_RESTAPI: {
-    block?: BlockHeader;
-    contractId: ContractId;
-    currentContract?: Contract;
-    initialContract: Contract;
-    metadata: Metadata;
-    roleTokenMintingPolicyId: Branded<string, PolicyIdBrand>;
-    state?: MarloweState;
-    status: "unsigned" | "submitted" | "confirmed";
-    tags: Tags;
-    txBody?: TextEnvelope;
-    unclaimedPayouts: {payoutId:TxOutRef; role: string;}[];
-    utxo?: TxOutRef;
-    version: "v1"
+block?: BlockHeader;
+contractId: ContractId;
+currentContract?: Contract;
+initialContract: Contract;
+metadata: Metadata;
+roleTokenMintingPolicyId: Branded<string, PolicyIdBrand>;
+state?: MarloweState;
+status: "unsigned" | "submitted" | "confirmed";
+tags: Tags;
+txBody?: TextEnvelope;
+unclaimedPayouts: {payoutId:TxOutRef; role: string;}[];
+utxo?: TxOutRef;
+version: "v1"
 }
 
 ApplicableAction: CanNotify | CanDeposit | CanChoose | CanAdvance
