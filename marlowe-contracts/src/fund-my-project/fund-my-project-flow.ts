@@ -7,17 +7,18 @@ import { CanAdvance, CanDeposit, ContractInstanceAPI, RuntimeLifecycle } from "@
 import { input, select } from "@inquirer/prompts";
 import { bech32Validator, dateInFutureValidator, positiveBigIntValidator, waitIndicator } from "../utils/utils.js";
 import { SourceMap, mkSourceMap } from "../utils/experimental-features/source-map.js";
-import {
-  DelayPaymentAnnotations,
-  DelayPaymentParameters,
-  delayPaymentGetActions,
-  delayPaymentGetState,
-  delayPaymentPrintState,
-  delayPaymentTemplate,
-  delayPaymentValidation,
-  mkDelayPayment,
-} from "./delay-payment.js";
 import { datetoTimeout } from "@marlowe.io/language-core-v1";
+import {
+  FundMyProjectAnnotations,
+  FundMyProjectParameters,
+  fundMyProjectGetActions,
+  fundMyProjectGetState,
+  fundMyProjectPrintState,
+  fundMyProjectTag,
+  fundMyProjectTemplate,
+  fundMyProjectValidation,
+  mkFundMyProject,
+} from "./fund-my-project.js";
 
 // When this script is called, start with main.
 main();
@@ -87,9 +88,9 @@ async function mainLoop(lifecycle: RuntimeLifecycle, rewardAddress?: StakeAddres
  * @param rewardAddress An optional reward address to stake the contract rewards
  */
 export async function createContractMenu(lifecycle: RuntimeLifecycle, rewardAddress?: StakeAddressBech32) {
-  const payee = addressBech32(
+  const payer = addressBech32(
     await input({
-      message: "Enter the payee address",
+      message: "Enter the funding address",
       validate: bech32Validator,
     })
   );
@@ -106,31 +107,33 @@ export async function createContractMenu(lifecycle: RuntimeLifecycle, rewardAddr
   });
   const depositDeadline = new Date(depositDeadlineStr);
 
-  const releaseDeadlineStr = await input({
-    message: "Enter the release deadline",
-    validate: dateInFutureValidator,
+  const projectName = await input({
+    message: "Enter the project name",
   });
-  const releaseDeadline = new Date(releaseDeadlineStr);
+
+  const githubUrl = await input({
+    message: "Enter the githubUrl",
+  });
 
   const walletAddress = (await lifecycle.wallet.getUsedAddresses())[0];
-  console.log(`Making a delayed payment:\n * from  ${walletAddress}\n * to ${payee}\n * for ${amount} lovelaces\n`);
-  console.log(`The payment must be deposited before ${depositDeadline} and can be released to the payee after ${releaseDeadline}`);
+  console.log(`Fund my project:\n * from  ${payer}\n * to ${walletAddress}\n * for ${amount} lovelaces\n`);
   if (rewardAddress) {
     console.log(`In the meantime, the contract will stake rewards to ${rewardAddress}`);
   }
 
-  const scheme: DelayPaymentParameters = {
-    payer: walletAddress,
-    payee,
+  const scheme: FundMyProjectParameters = {
+    payer,
+    payee: walletAddress,
     amount,
     depositDeadline,
-    releaseDeadline,
+    projectName,
+    githubUrl,
   };
-  const metadata = delayPaymentTemplate.toMetadata(scheme);
-  const sourceMap = await mkSourceMap(lifecycle, mkDelayPayment(scheme));
+  const metadata = fundMyProjectTemplate.toMetadata(scheme);
+  const sourceMap = await mkSourceMap(lifecycle, mkFundMyProject(scheme));
   const contractInstance = await sourceMap.createContract({
     stakeAddress: rewardAddress,
-    tags: { DELAY_PAYMENT_VERSION: "2" },
+    tags: fundMyProjectTag,
     metadata,
   });
 
@@ -156,8 +159,8 @@ async function loadContractMenu(lifecycle: RuntimeLifecycle) {
     message: "Enter the contractId",
   });
   const cid = contractId(cidStr);
-  // Then we make sure that contract id is an instance of our delayed payment contract
-  const validationResult = await delayPaymentValidation(lifecycle, cid);
+  // Then we make sure that contract id is an instance of our fund my project contract
+  const validationResult = await fundMyProjectValidation(lifecycle, cid);
   if (validationResult === "InvalidMarloweTemplate") {
     console.log("Invalid contract, it does not have the expected tags");
     return;
@@ -173,7 +176,8 @@ async function loadContractMenu(lifecycle: RuntimeLifecycle) {
   console.log(`  * Pay to: ${validationResult.scheme.payee}`);
   console.log(`  * Amount: ${validationResult.scheme.amount} lovelaces`);
   console.log(`  * Deposit deadline: ${validationResult.scheme.depositDeadline}`);
-  console.log(`  * Release deadline: ${validationResult.scheme.releaseDeadline}`);
+  console.log(`  Project Name: ${validationResult.scheme.projectName}`);
+  console.log(`  Project Github: ${validationResult.scheme.githubUrl}`);
   const contractInstance = await lifecycle.newContractAPI.load(cid);
   return contractMenu(lifecycle.wallet, contractInstance, validationResult.scheme, validationResult.sourceMap);
 }
@@ -184,23 +188,23 @@ async function loadContractMenu(lifecycle: RuntimeLifecycle) {
 async function contractMenu(
   wallet: WalletAPI,
   contractInstance: ContractInstanceAPI,
-  scheme: DelayPaymentParameters,
-  sourceMap: SourceMap<DelayPaymentAnnotations>
+  scheme: FundMyProjectParameters,
+  sourceMap: SourceMap<FundMyProjectAnnotations>
 ): Promise<void> {
   const inputHistory = await contractInstance.getInputHistory();
-  console.log({ inputHistory });
+  // console.log({ inputHistory });
 
-  const contractState = delayPaymentGetState(datetoTimeout(new Date()), inputHistory, sourceMap);
-  console.log({ contractState });
+  const contractState = fundMyProjectGetState(datetoTimeout(new Date()), inputHistory, sourceMap);
+  // console.log({ contractState });
 
   if (contractState.type === "Closed") return;
 
-  delayPaymentPrintState(contractState, scheme);
+  fundMyProjectPrintState(contractState, scheme);
   // See what actions are applicable to the current contract state
   const applicableActions = await contractInstance.evaluateApplicableActions();
-  console.log({ applicableActions });
+//   console.log({ applicableActions });
 
-  const choices = delayPaymentGetActions(applicableActions, contractState);
+  const choices = fundMyProjectGetActions(applicableActions, contractState);
 
   const selectedAction = await select({
     message: "Contract menu",
