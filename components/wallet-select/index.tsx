@@ -2,25 +2,19 @@
 
 import { type SupportedWalletName } from "@marlowe.io/wallet/browser";
 import Image from "next/image";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { COLORS, ICON_SIZES } from "@/constants";
 import { TailorButton, SIZE } from "@/components/tailor-button/tailorButton";
-import { Loading } from "@/components/loading/loading";
 import { WalletsSupported } from "./walletSupported";
 import { useCardanoStore } from "@/hooks/use-cardano-store";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { useLoadingWallet } from "@/hooks/use-loading-wallet";
 
 export const WalletSelect = () => {
-  const [openInfo, setOpenInfo] = useState(false);
-  const [loading, setLoading] = useState(true);
+  const [openInfo, setOpenInfo] = useState(false);  
   const { walletExtensions, connectWallet, balance, isOpen, onClose } =
-    useCardanoStore();
-
-  useEffect(() => {
-    if (walletExtensions !== undefined) {
-      setLoading(false);
-    }
-  }, [walletExtensions]);
+    useCardanoStore(); 
+    const { isLoading } = useLoadingWallet();
 
   const handleSelectWallet = (wallet: SupportedWalletName) => async () => {
     await connectWallet(wallet);
@@ -28,12 +22,8 @@ export const WalletSelect = () => {
 
   const toggleInfo = () => setOpenInfo((prev) => !prev);
 
-  if (loading || walletExtensions === undefined) {
-    return (
-      <div className="flex flex-grow items-center justify-center">
-        <Loading sizeDesktop={ICON_SIZES.S} />
-      </div>
-    );
+  if (isLoading || walletExtensions === undefined) {
+    return null;
   }
 
   if (walletExtensions.length === 0) {
