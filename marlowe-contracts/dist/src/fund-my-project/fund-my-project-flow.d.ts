@@ -5,5 +5,5 @@ import { RuntimeLifecycle } from "@marlowe.io/runtime-lifecycle/api";
  * @param lifecycle An instance of the RuntimeLifecycle
  * @param rewardAddress An optional reward address to stake the contract rewards
  */
-export declare function createContractMenu(lifecycle: RuntimeLifecycle, rewardAddress?: StakeAddressBech32): Promise<void>;
+export declare function createContractMenu(lifecycleNami: RuntimeLifecycle, lifecycleLace: RuntimeLifecycle, rewardAddress?: StakeAddressBech32): Promise<void>;
 //# sourceMappingURL=fund-my-project-flow.d.ts.map
