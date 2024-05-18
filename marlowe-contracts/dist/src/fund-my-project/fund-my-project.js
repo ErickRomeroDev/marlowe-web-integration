@@ -1,19 +1,18 @@
-// region Delay Payment Contract
 import { mkMarloweTemplate } from "@marlowe.io/marlowe-template";
 import { lovelace, close } from "@marlowe.io/marlowe-object";
 import { datetoTimeout } from "@marlowe.io/language-core-v1";
 import { mkSourceMap } from "../utils/experimental-features/source-map.js";
 import * as ObjG from "@marlowe.io/marlowe-object/guards";
 import * as t from "io-ts/lib/index.js";
-const DelayPaymentAnnotationsGuard = t.union([
+export const fundMyProjectTag = { "FUND_MY_PROJECT_VERSION_1": {}, "FILTER-VERSION_1": { contracts: "normal", vcs: "registered" } };
+const FundMyProjectAnnotationsGuard = t.union([
     t.literal("initialDeposit"),
-    t.literal("WaitForRelease"),
     t.literal("PaymentMissedClose"),
     t.literal("PaymentReleasedClose"),
 ]);
-export const delayPaymentTemplate = mkMarloweTemplate({
-    name: "Delayed payment",
-    description: "In a delay payment, a `payer` transfer an `amount` of ADA to the `payee` which can be redeemed after a `releaseDeadline`. While the payment is held by the contract, it can be staked to the payer, to generate pasive income while the payee has the guarantees that the money will be released.",
+export const fundMyProjectTemplate = mkMarloweTemplate({
+    name: "Fund my project",
+    description: "Fund projects that are making the Cardano Community grow!!!",
     params: [
         {
             name: "payer",
@@ -36,25 +35,21 @@ export const delayPaymentTemplate = mkMarloweTemplate({
             type: "date",
         },
         {
-            name: "releaseDeadline",
-            description: "A date after the payment can be released to the receiver. NOTE: An empty transaction must be done to close the contract",
-            type: "date",
+            name: "projectName",
+            description: "The name of the project",
+            type: "string",
+        },
+        {
+            name: "githubUrl",
+            description: "The link of the project GITHUB repository",
+            type: "string",
         },
     ],
 });
-export function mkDelayPayment(scheme) {
+export function mkFundMyProject(scheme) {
     return {
         main: "initial-deposit",
         objects: {
-            "release-funds": {
-                type: "contract",
-                value: {
-                    annotation: "WaitForRelease",
-                    when: [],
-                    timeout: datetoTimeout(scheme.releaseDeadline),
-                    timeout_continuation: close("PaymentReleasedClose"),
-                },
-            },
             "initial-deposit": {
                 type: "contract",
                 value: {
@@ -67,9 +62,7 @@ export function mkDelayPayment(scheme) {
                                 of_token: lovelace,
                                 into_account: { address: scheme.payee },
                             },
-                            then: {
-                                ref: "release-funds",
-                            },
+                            then: close("PaymentReleasedClose"),
                         },
                     ],
                     timeout: datetoTimeout(scheme.depositDeadline),
@@ -79,35 +72,24 @@ export function mkDelayPayment(scheme) {
         },
     };
 }
-export async function delayPaymentValidation(lifecycle, contractId) {
+export async function fundMyProjectValidation(lifecycle, contractId) {
     // First we try to fetch the contract details and the required tags
     const contractDetails = await lifecycle.restClient.getContractById({
         contractId,
     });
-    const scheme = delayPaymentTemplate.fromMetadata(contractDetails.metadata);
+    const scheme = fundMyProjectTemplate.fromMetadata(contractDetails.metadata);
     if (!scheme) {
         return "InvalidMarloweTemplate";
     }
-    // If the contract seems to be an instance of the contract we want (meanin, we were able
-    // to retrieve the contract scheme) we check that the actual initial contract has the same
-    // sources.
-    // This has 2 purposes:
-    //   1. Make sure we are interacting with the expected contract
-    //   2. Share the same sources between different Runtimes.
-    //      When a contract source is uploaded to the runtime, it merkleizes the source code,
-    //      but it doesn't share those sources with other runtime instances. One option would be
-    //      to download the sources from the initial runtime and share those with another runtime.
-    //      Or this option which doesn't require runtime to runtime communication, and just requires
-    //      the dapp to be able to recreate the same sources.
-    const sourceMap = await mkSourceMap(lifecycle, mkDelayPayment(scheme));
+    const sourceMap = await mkSourceMap(lifecycle, mkFundMyProject(scheme));
     const isInstanceof = await sourceMap.contractInstanceOf(contractId);
     if (!isInstanceof) {
         return "InvalidContract";
     }
     return { scheme, sourceMap };
 }
-export function delayPaymentGetState(currenTime, history, sourceMap) {
-    const Annotated = ObjG.Annotated(DelayPaymentAnnotationsGuard);
+export function fundMyProjectGetState(currenTime, history, sourceMap) {
+    const Annotated = ObjG.Annotated(FundMyProjectAnnotationsGuard);
     const txOut = sourceMap.playHistory(history);
     if ("transaction_error" in txOut) {
         throw new Error(`Error playing history: ${txOut.transaction_error}`);
@@ -123,39 +105,26 @@ export function delayPaymentGetState(currenTime, history, sourceMap) {
             else {
                 return { type: "InitialState" };
             }
-        case "WaitForRelease":
-            if (currenTime > txOut.contract.timeout) {
-                return { type: "PaymentReady" };
-            }
-            else {
-                return { type: "PaymentDeposited" };
-            }
         case "PaymentMissedClose":
             return { type: "Closed", result: "Missed deposit" };
         case "PaymentReleasedClose":
             return { type: "Closed", result: "Payment released" };
     }
 }
-export function delayPaymentPrintState(state, scheme) {
+export function fundMyProjectPrintState(state, scheme) {
     switch (state.type) {
         case "InitialState":
             console.log(`Waiting ${scheme.payer} to deposit ${scheme.amount}`);
-            break;
-        case "PaymentDeposited":
-            console.log(`Payment deposited, waiting until ${scheme.releaseDeadline} to be able to release the payment`);
-            break;
+            return { printResult: `Waiting ${scheme.payer} to deposit ${scheme.amount}` };
         case "PaymentMissed":
             console.log(`Payment missed on ${scheme.depositDeadline}, contract can be closed to retrieve minUTXO`);
-            break;
-        case "PaymentReady":
-            console.log(`Payment ready to be released`);
-            break;
+            return { printResult: `Payment missed on ${scheme.depositDeadline}, contract can be closed to retrieve minUTXO` };
         case "Closed":
             console.log(`Contract closed: ${state.result}`);
-            break;
+            return { printResult: `Contract closed: ${state.result}` };
     }
 }
-export function delayPaymentGetActions(applicableAction, contractState) {
+export function fundMyProjectGetActions(applicableAction, contractState) {
     return [
         {
             name: "Re-check contract state",
@@ -166,9 +135,7 @@ export function delayPaymentGetActions(applicableAction, contractState) {
                 case "Advance":
                     return {
                         name: "Close contract",
-                        description: contractState.type == "PaymentMissed"
-                            ? "The payer will receive minUTXO"
-                            : "The payer will receive minUTXO and the payee will receive the payment",
+                        description: "Receive minUTXO",
                         value: action,
                     };
                 case "Deposit":
@@ -186,4 +153,4 @@ export function delayPaymentGetActions(applicableAction, contractState) {
         },
     ];
 }
-//# sourceMappingURL=delay-payment.js.map
+//# sourceMappingURL=fund-my-project.js.map
