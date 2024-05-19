@@ -2,7 +2,7 @@
 
 # dependencies
 /node_modules
-/marlowe-contracts/node_modules
+/marlowe-contracts-cli/node_modules
 /.pnp
 .pnp.js
 .yarn/install-state.gz
