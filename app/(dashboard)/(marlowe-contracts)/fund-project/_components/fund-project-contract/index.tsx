@@ -1,19 +1,23 @@
 "use client";
 
 import { useState } from "react";
-import { RequestFunding } from "./request-funding";
-import { ProvideFunding } from "./provide-funding";
+import { CreateContract } from "./create-contract";
+import { MyActiveContracts } from "./myActive-contracts";
+import { LoadContract } from "./load-contract";
 
 export const FundMyProjectContract = () => {
-  type State = "requestFunding" | "provideFunding";
-  const [state, setState] = useState<State>("requestFunding");
+  type State = "createContract" | "myActiveContracts" | "loadContract";
+  const [state, setState] = useState<State>("createContract");
   return (
     <div>
-      <div>
-        <button onClick={() => setState("requestFunding")}>Request Funding</button>
-        <button onClick={() => setState("provideFunding")}>Provide Funding</button>
+      <div className="space-x-3">
+        <button onClick={() => setState("createContract")}>Create Contract</button>
+        <button onClick={() => setState("myActiveContracts")}>See my active contracts</button>
+        <button onClick={() => setState("loadContract")}>Load Contract</button>
       </div>
-      <div>{state === "requestFunding" ? <RequestFunding /> : <ProvideFunding />}</div>
+      <div>{state === "createContract" && <CreateContract /> }</div>
+      <div>{state === "myActiveContracts" && <MyActiveContracts /> }</div>
+      <div>{state === "loadContract" && <LoadContract /> }</div>
     </div>
   );
 };
