@@ -20,7 +20,7 @@ import {
   FundMyProjectParameters,
   fundMyProjectGetActions,
   fundMyProjectGetState,
-  fundMyProjectPrintState,
+  fundMyProjectStatePlus,
   fundMyProjectTag,
   fundMyProjectTemplate,
   fundMyProjectValidation,
@@ -122,7 +122,7 @@ export async function downloadMenu(lifecycleNami: RuntimeLifecycle) {
         const contractState = fundMyProjectGetState(datetoTimeout(new Date()), inputHistory, result.sourceMap);
         console.log("contractState", contractState)
         if(contractState.type !== "Closed") {
-          fundMyProjectPrintState(contractState, result.scheme);
+          fundMyProjectStatePlus(contractState, result.scheme);
           const applicableActions = await contractInstance.evaluateApplicableActions();
           const choices = fundMyProjectGetActions(applicableActions, contractState);
           console.log("choices", choices)
@@ -256,7 +256,7 @@ async function contractMenu(
 
   if (contractState.type === "Closed") return;
 
-  fundMyProjectPrintState(contractState, scheme);
+  fundMyProjectStatePlus(contractState, scheme);
   // See what actions are applicable to the current contract state
   const applicableActions = await contractInstance.evaluateApplicableActions();
   //   console.log({ applicableActions });

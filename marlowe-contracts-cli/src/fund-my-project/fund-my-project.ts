@@ -1,11 +1,11 @@
 import { TemplateParametersOf, mkMarloweTemplate } from "@marlowe.io/marlowe-template";
 import { ContractBundleMap, lovelace, close } from "@marlowe.io/marlowe-object";
-import { When, datetoTimeout } from "@marlowe.io/language-core-v1";
+import { MarloweState, When, datetoTimeout } from "@marlowe.io/language-core-v1";
 import { CanAdvance, CanDeposit, NewApplicableActionsAPI, RuntimeLifecycle } from "@marlowe.io/runtime-lifecycle/api";
 import { ContractId, Tags } from "@marlowe.io/runtime-core";
 import { SourceMap, SourceMapRest, mkSourceMap, mkSourceMapRest } from "../utils/experimental-features/source-map.js";
 import { POSIXTime } from "@marlowe.io/adapter/time";
-import { SingleInputTx } from "@marlowe.io/language-core-v1/semantics";
+import { SingleInputTx, TransactionSuccess } from "@marlowe.io/language-core-v1/semantics";
 import * as ObjG from "@marlowe.io/marlowe-object/guards";
 import * as t from "io-ts";
 import { RestClient } from "@marlowe.io/runtime-rest-client";
@@ -31,17 +31,27 @@ export type FundMyProjectValidationResultsRest =
       sourceMap: SourceMapRest<FundMyProjectAnnotations>;
     };
 
+export type FundMyProjectMetadataResults =
+  | "InvalidMarloweTemplate"
+  | {
+      scheme: FundMyProjectParameters;
+      stateMarlowe: MarloweState | undefined
+    };
+
 export type FundMyProjectState = InitialState | PaymentMissed | Closed;
 
 type InitialState = {
   type: "InitialState";
+  txSuccess: TransactionSuccess
 };
 type PaymentMissed = {
   type: "PaymentMissed";
+  txSuccess: TransactionSuccess
 };
 type Closed = {
   type: "Closed";
   result: "Missed deposit" | "Payment released";
+  txSuccess: TransactionSuccess
 };
 
 const FundMyProjectAnnotationsGuard = t.union([
@@ -120,6 +130,20 @@ export function mkFundMyProject(scheme: FundMyProjectParameters): ContractBundle
   };
 }
 
+//use when both wallet API and address
+export async function fundMyProjectMetadata(restClient: RestClient, contractId: ContractId): Promise<FundMyProjectMetadataResults> {
+  // First we try to fetch the contract details and the required tags
+  const contractDetails = await restClient.getContractById({
+    contractId,
+  });
+  const scheme = fundMyProjectTemplate.fromMetadata(contractDetails.metadata);
+  if (!scheme) {
+    return "InvalidMarloweTemplate";
+  }
+  const stateMarlowe = contractDetails.state  
+  return { scheme, stateMarlowe };
+}
+
 //use when wallet API
 export async function fundMyProjectValidation(
   lifecycle: RuntimeLifecycle,
@@ -159,19 +183,19 @@ export function fundMyProjectGetState(
   switch (txOut.contract.annotation) {
     case "initialDeposit":
       if (currenTime > (txOut.contract as When).timeout) {
-        return { type: "PaymentMissed" };
+        return { type: "PaymentMissed", txSuccess: txOut };
       } else {
-        return { type: "InitialState" };
+        return { type: "InitialState", txSuccess: txOut };
       }
     case "PaymentMissedClose":
-      return { type: "Closed", result: "Missed deposit" };
+      return { type: "Closed", result: "Missed deposit", txSuccess: txOut };
     case "PaymentReleasedClose":
-      return { type: "Closed", result: "Payment released" };
+      return { type: "Closed", result: "Payment released", txSuccess: txOut };
   }
 }
 
 //use when both wallet API and address
-export function fundMyProjectPrintState(state: FundMyProjectState, scheme: FundMyProjectParameters) {
+export function fundMyProjectStatePlus(state: FundMyProjectState, scheme: FundMyProjectParameters) {
   switch (state.type) {
     case "InitialState":
       console.log(`Waiting ${scheme.payer} to deposit ${scheme.amount}`);
