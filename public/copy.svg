@@ -1,1 +1,6 @@
-<svg xmlns="http://www.w3.org/2000/svg" height="24" viewBox="0 -960 960 960" width="24"><path d="M360-240q-33 0-56.5-23.5T280-320v-480q0-33 23.5-56.5T360-880h360q33 0 56.5 23.5T800-800v480q0 33-23.5 56.5T720-240H360Zm0-80h360v-480H360v480ZM200-80q-33 0-56.5-23.5T120-160v-560h80v560h440v80H200Zm160-240v-480 480Z"/></svg>
+<svg xmlns="http://www.w3.org/2000/svg" width="25.5" height="25.5" viewBox="0 0 25.5 25.5">
+  <g id="Grupo_83" data-name="Grupo 83" transform="translate(-1.25 -1.25)">
+    <rect id="Retângulo_106" data-name="Retângulo 106" width="17" height="17" rx="2" transform="translate(9 9)" fill="none" stroke="#828282" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"/>
+    <path id="Caminho_93" data-name="Caminho 93" d="M4.4,18.8A2.407,2.407,0,0,1,2,16.4V4.4A2.407,2.407,0,0,1,4.4,2h12a2.407,2.407,0,0,1,2.4,2.4" fill="none" stroke="#828282" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"/>
+  </g>
+</svg>

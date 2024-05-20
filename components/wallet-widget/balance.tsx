@@ -1,13 +1,13 @@
 import { useCardanoStore } from "@/hooks/use-cardano-store";
 
 export const Balance = () => {
-  const { walletExtensions, connectWallet, disconnectWallet, balance } = useCardanoStore();
+  const { balance, network } = useCardanoStore();
 
   return (
-    <div>
+    <div className="flex text-[17px] text-[#808191]">
       {balance?.toFixed(2)}
       &nbsp;
-      <b>t₳</b>
+      <div >{network === "testnet" ? "t₳" : "₳"}</div>
     </div>
   );
 };

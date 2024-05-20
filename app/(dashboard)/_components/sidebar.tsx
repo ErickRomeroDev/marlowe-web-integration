@@ -1,9 +1,26 @@
 import Link from "next/link";
+import { SidebarButton, SidebarButtonProps } from "./sidebar-button";
 
 export const Sidebar = () => {
+  const buttons: SidebarButtonProps[] = [
+    { label: "Deposit test", imageSrc: "/unplug.svg", href: "/deposit-test" },
+
+    { label: "Deposit test", imageSrc: "/unplug.svg", href: "/deposit-test" },
+  ];
+
   return (
     <aside className="fixed z-[1] left-0 bg-white h-full w-[220px] rounded-[30px] flex p-3 flex-col gap-y-4 text-[#121216]">
-      <div className="py-4">
+      <div>
+        {buttons.map((button) => (
+          <SidebarButton
+            key={button.label}
+            label={button.label}
+            imageSrc={button.imageSrc}
+            href={button.href}
+          />
+        ))}
+      </div>
+      {/* <div className="py-4">
         <div className="space-y-1 flex flex-col">
           <div className="font-bold">
             Contracts available
@@ -21,7 +38,7 @@ export const Sidebar = () => {
             3. Fund my project
           </Link>
         </div>
-      </div>
+      </div> */}
     </aside>
   );
 };
