@@ -9,7 +9,7 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
   return (
     <main className="h-full bg-[#F5F5F8]">
       <Sidebar />
-      <div className="pl-[220px] h-full flex gap-x-3">
+      <div className="pl-[230px] h-full flex gap-x-3">
         <div className="h-full flex-1">
           <Navbar />
           {children}

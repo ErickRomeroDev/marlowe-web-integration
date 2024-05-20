@@ -47,7 +47,7 @@ export const WalletWidget = () => {
       {walletAddress === undefined && (
         <div className="relative pl-20 ">
           <button
-            className="flex items-center h-[48px] border-[1.5px] border-[#808191] rounded-full justify-center gap-3 px-5 hover:bg-[#Fafafa]"
+            className="flex items-center h-[48px] border-[1.5px] border-[#808191] rounded-full justify-center gap-3 px-5 transition-colors hover:bg-[#Fafafa]"
             onClick={onOpen}
           >
             <Image
