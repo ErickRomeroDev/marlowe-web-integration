@@ -1,7 +1,9 @@
+import { FundMyProjectContract } from "./_components/fund-project-contract";
+
 const FundMyProject = () => {
     return (
         <div>
-        Fund my project!
+        <FundMyProjectContract/>
         </div>
     )  
 }

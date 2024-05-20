@@ -5,19 +5,14 @@ import { Input } from "@/components/ui/input";
 import { Party } from "@marlowe.io/language-core-v1";
 import { AddressBech32, ContractId } from "@marlowe.io/runtime-core";
 import { useState } from "react";
-import {
-  deposit_tag,
-  mkDepositContract,
-} from "@/marlowe-contracts/src/contract-deposit/mk-deposit-contract";
+import { deposit_tag, mkDepositContract } from "@/marlowe-contracts-cli/src/contract-deposit/mk-deposit-contract";
 import { useCardanoStore } from "@/hooks/use-cardano-store";
 
 type State = "createContract" | "showContract";
 
 export const DepositTest = () => {
   const { runtimeLifecycle, walletAddress } = useCardanoStore();
-  const [contractId, setContractId] = useState<ContractId | undefined>(
-    undefined
-  );
+  const [contractId, setContractId] = useState<ContractId | undefined>(undefined);
   const [bob, setBob] = useState<string>("");
   const [amt, setAmt] = useState<string>("");
   const [state, setState] = useState<State>("createContract");
@@ -48,20 +43,12 @@ export const DepositTest = () => {
 
   const depositTx = async () => {
     if (contractId && runtimeLifecycle) {
-      const contractInstanceAPI =
-        await runtimeLifecycle.newContractAPI.load(contractId);
+      const contractInstanceAPI = await runtimeLifecycle.newContractAPI.load(contractId);
       const contractDetails = await contractInstanceAPI.getDetails();
       if (contractDetails.type === "active") {
-        const [applicableAction] =
-          await runtimeLifecycle.applicableActions.getApplicableActions(
-            contractDetails
-          );
+        const [applicableAction] = await runtimeLifecycle.applicableActions.getApplicableActions(contractDetails);
         if (applicableAction.type !== "Choice") {
-          const applicableInput =
-            await runtimeLifecycle.applicableActions.getInput(
-              contractDetails,
-              applicableAction
-            );
+          const applicableInput = await runtimeLifecycle.applicableActions.getInput(contractDetails, applicableAction);
           const txId = await contractInstanceAPI.applyInput({
             input: applicableInput,
           });
@@ -74,26 +61,14 @@ export const DepositTest = () => {
   return (
     <div className="flex flex-col space-y-4 py-8">
       <div>
-        <button onClick={() => setState("createContract")}>
-          Create contract
-        </button>
+        <button onClick={() => setState("createContract")}>Create contract</button>
         <button onClick={() => setState("showContract")}>Show contract</button>
       </div>
 
       {state === "createContract" ? (
         <form onSubmit={deploy} className="flex flex-col space-y-2">
-          <Input
-            type="text"
-            placeholder="Bob"
-            value={bob}
-            onChange={(e) => setBob(e.target.value)}
-          />
-          <Input
-            type="text"
-            placeholder="Amount"
-            value={amt}
-            onChange={(e) => setAmt(e.target.value)}
-          />
+          <Input type="text" placeholder="Bob" value={bob} onChange={(e) => setBob(e.target.value)} />
+          <Input type="text" placeholder="Amount" value={amt} onChange={(e) => setAmt(e.target.value)} />
           <Button type="submit">Deploy Smart Contract {contractId}</Button>
         </form>
       ) : (
