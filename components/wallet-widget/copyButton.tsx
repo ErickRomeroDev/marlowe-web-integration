@@ -1,52 +1,41 @@
 import Image from "next/image";
-import { useState } from "react";
-import { ICON_SIZES } from "@/constants";
+import { toast } from "sonner";
+
+import { Hint } from "@/components/hint";
 
 interface CopyButtonProps {
   text: string;
 }
 
 export const CopyButton = ({ text }: CopyButtonProps) => {
-  const [copied, setCopied] = useState(false);
 
   const copyToClipboard = async () => {
     try {
       await navigator.clipboard.writeText(text).then(() => {
-        setCopied(true);
-        setTimeout(() => {
-          setCopied(false);
-        }, 3000);
+        toast.success("Address copied to clipboard!")
       });
+      
     } catch (err) {
       console.error("Failed to copy address: ", err);
+      toast.error("Failed to copy address.")
     }
   };
 
   return (
-    <div>
-      {copied ? (
-        <div className="animate-bounce">
-          <abbr title="Copied!">
-            <Image
-              src="/check.svg"
-              alt="✓"
-              width={ICON_SIZES.M}
-              height={ICON_SIZES.M}
-            />
-          </abbr>
+        <div>
+          <Hint
+          label="copy address"
+          side="bottom"
+          align="start"
+          sideOffset={14}
+          >
+            <button
+              className="flex items-center justify-center h-[48px] w-[48px] rounded-full  transition-colors bg-[#ECEBF1] hover:bg-[#FAFAFA]"
+              onClick={copyToClipboard}
+            >
+              <Image src="/copy.svg" alt="Copy" width={18} height={18} />
+            </button>
+          </Hint>
         </div>
-      ) : (
-        <div onClick={copyToClipboard}>
-          <abbr title="Copy Address">
-            <Image
-              src="/copy.svg"
-              alt={"Copy"}
-              width={ICON_SIZES.M}
-              height={ICON_SIZES.M}
-            />
-          </abbr>
-        </div>
-      )}
-    </div>
   );
 };

@@ -5,6 +5,7 @@ import { ConvexClientProvider } from "@/providers/convex-client-provider";
 import CardanoClientProvider from "@/providers/cardano-client-provider";
 import { WalletWidget } from "@/components/wallet-widget";
 import { WalletSelect } from "@/components/wallet-select";
+import { Toaster } from "sonner";
 
 const urbanist = Urbanist({ subsets: ["latin"] });
 
@@ -23,6 +24,7 @@ export default function RootLayout({
       <body className={urbanist.className}>
         <ConvexClientProvider>
           <CardanoClientProvider/>
+          <Toaster />
           {children}
         </ConvexClientProvider>
       </body>

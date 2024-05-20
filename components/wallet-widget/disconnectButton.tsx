@@ -3,13 +3,14 @@ import { ICON_SIZES } from "@/constants";
 import { useCardanoStore } from "@/hooks/use-cardano-store";
 
 export const DisconnectButton = () => {
-  const { walletExtensions, connectWallet, disconnectWallet, balance } = useCardanoStore();
+  const { disconnectWallet } = useCardanoStore();
 
   return (
-    <div onClick={disconnectWallet}>
-      <abbr title="Disconnect Wallet">
-        <Image src="/disconnect.svg" alt="Disconnect" width={ICON_SIZES.M} height={ICON_SIZES.M} />
-      </abbr>
-    </div>
+    <button
+      className="flex items-center justify-center h-[48px] w-[48px] rounded-full  transition-colors bg-[#f33149] hover:bg-[#f33149]/80"
+      onClick={disconnectWallet}
+    >
+      <Image src="/unplug.svg" alt="Disconnect" width={20} height={20} />
+    </button>
   );
 };
