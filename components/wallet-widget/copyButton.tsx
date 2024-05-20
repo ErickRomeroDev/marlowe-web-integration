@@ -1,9 +1,7 @@
 import Image from "next/image";
-import { useState } from "react";
-
-import { ICON_SIZES } from "@/constants";
-import { Hint } from "@/components/hint";
 import { toast } from "sonner";
+
+import { Hint } from "@/components/hint";
 
 interface CopyButtonProps {
   text: string;
@@ -32,7 +30,7 @@ export const CopyButton = ({ text }: CopyButtonProps) => {
           sideOffset={14}
           >
             <button
-              className="flex items-center justify-center h-[48px] w-[48px] rounded-full  transition-colors bg-[#ECEBF1] hover:bg-[#ECEBF1]/70"
+              className="flex items-center justify-center h-[48px] w-[48px] rounded-full  transition-colors bg-[#ECEBF1] hover:bg-[#FAFAFA]"
               onClick={copyToClipboard}
             >
               <Image src="/copy.svg" alt="Copy" width={18} height={18} />
