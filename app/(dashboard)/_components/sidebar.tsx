@@ -16,7 +16,7 @@ export const Sidebar = () => {
   ];
 
   return (
-    <div className="fixed inset-0 flex items-center">
+    <div className="fixed inset-0 flex items-center h-full w-[218px]">
       <aside className="fixed flex z-[1] left-3 h-[calc(100%-24px)] w-[218px] drop-shadow-lg bg-white  rounded-[30px] pl-5 pr-4 py-8 flex-col justify-between">
         <Link href="/">
           <div className="flex items-center justify-center">
