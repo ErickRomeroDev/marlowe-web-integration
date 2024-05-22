@@ -1,20 +1,18 @@
-import Link from "next/link";
 import { getCookies } from "@/lib/get-cookies";
+import Image from "next/image";
 
 export default async function Home() {
   const { address, walletName, network, balance } = getCookies("walletInfo");
 
   return (
-    <div className="py-4">
-      <div className="space-y-1 flex flex-col">
-        <div className="font-bold">Contracts available ({address ? "connected" : "disconnected"}):</div>
-        <Link href="/marloweContracts/deposit-test" className="cursor-pointer">
-          1. Deposit Test
-        </Link>
-        <Link href="/marloweContracts/buy-coffee" className="cursor-pointer">
-          2. Buy me a coffee
-        </Link>
-      </div>        
+    <div className="p-4 flex flex-col h-[calc(100%-100px)] items-center justify-center  space-y-8">
+      <Image 
+      src="/select-contract.svg"
+      alt="select"
+      height={180}
+      width={180}
+      />
+      <span className="text-[#808191]">Please select a contract to continue.</span>     
     </div>
   );
 }

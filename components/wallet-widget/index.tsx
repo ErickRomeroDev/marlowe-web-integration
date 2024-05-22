@@ -1,7 +1,6 @@
 "use client";
 
 import Image from "next/image";
-import { COLORS, ICON_SIZES } from "@/constants";
 import { Balance } from "./balance";
 import { CopyButton } from "./copyButton";
 import { DisconnectButton } from "./disconnectButton";
