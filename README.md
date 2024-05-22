@@ -56,7 +56,7 @@ Procedure for designing, creating, testing and integrating Marlowe smart contrac
 - **Web Integration:** After testing the contract using CLI commands, the web integration process begins. This involves connecting the contract logic with a web framework, ensuring proper integration, incorporating a wallet plugin, and focusing on UI and UX design. Additionally, it includes testing to confirm that the contract executes as expected within the web environment.
 
 Next, we include a list of contracts included in this repository that have been tested using some of the features and procedures mentioned earlier.
-Live DAPP is available at this link: .......
+Live DAPP is available at this link: https://marlowe-web-integration.vercel.app/
 
 ### Deposit Contract
 
@@ -64,7 +64,6 @@ Live DAPP is available at this link: .......
 
 - User can create a deposit intention contract, and perform a deposit right after the contract was created. 
 - Purpose: TS-SDK and web integration testing
-- Live demontration is available at this link: .......
 
 `Features included:`
 
@@ -112,7 +111,6 @@ export const mkDepositContract = (amtLovelace: number, alice: Party, bob: Party)
 - User can request funding to a specific sponsor address. 
 - Sponsor can view funding requests and choose to fund those they find appropriate.
 - Purpose: Test API that request contracts that are specific to an address and follows a specific tag.
-- Live demontration is available at this link: .......
 
 `Features included:`
 
@@ -161,7 +159,6 @@ export const mkDepositContract = (amtLovelace: number, alice: Party, bob: Party)
 - The venture capitalist can view all contracts requesting support and see all related details, including the parameters set during contract creation (addresses, amounts, and time). They can also determine the contract's state and what actions can be taken. 
 - A specific contract lookup feature was included for VCs searching for a particular project owner's contract by its ID.
 - Purpose: We tested the initialization of a framework to create on-chain and off-chain Contract APIs, allowing Dapp developers to focus on their applications without worrying about contract logic. Some experimental features included using Marlowe parameters and treating the contract as a bundled object.
-- Live demontration is available at this link: .......
 
 `Features included:`
 
@@ -243,4 +240,3 @@ export function mkFundMyProject(scheme: FundMyProjectParameters): ContractBundle
 }
 ```
 
-https://github.com/Erickrs2/marlowe-web-integration/blob/main
