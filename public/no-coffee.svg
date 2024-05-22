@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="154.707" height="156.408" viewBox="0 0 154.707 156.408">
+  <g id="Grupo_147" data-name="Grupo 147" transform="translate(-889.96 -451.5)">
+    <g id="Grupo_125" data-name="Grupo 125" transform="translate(898.833 452)">
+      <path id="Caminho_100" data-name="Caminho 100" d="M10,2V16.772" transform="translate(44.702 0)" fill="none" stroke="#bdbec9" stroke-linecap="round" stroke-linejoin="round" stroke-width="5"/>
+      <path id="Caminho_101" data-name="Caminho 101" d="M14,2V16.772" transform="translate(70.246 0)" fill="none" stroke="#bdbec9" stroke-linecap="round" stroke-linejoin="round" stroke-width="5"/>
+      <path id="Caminho_102" data-name="Caminho 102" d="M99.018,8a7.386,7.386,0,0,1,7.386,7.386V74.474A29.544,29.544,0,0,1,76.86,104.018H32.544A29.544,29.544,0,0,1,3,74.474V15.386A7.386,7.386,0,0,1,10.386,8h103.4a29.544,29.544,0,1,1,0,59.088H106.4" transform="translate(0 38.316)" fill="none" stroke="#bdbec9" stroke-linecap="round" stroke-linejoin="round" stroke-width="5"/>
+      <path id="Caminho_103" data-name="Caminho 103" d="M6,2V16.772" transform="translate(19.158 0)" fill="none" stroke="#bdbec9" stroke-linecap="round" stroke-linejoin="round" stroke-width="5"/>
+    </g>
+    <line id="Linha_14" data-name="Linha 14" x2="127" y2="134" transform="translate(892.5 471.5)" fill="none" stroke="#f0f1f5" stroke-width="7"/>
+  </g>
+</svg>
