@@ -63,7 +63,7 @@ export const CoffeesToFund = () => {
     return () => {
       shouldUpdateRef.current = false;
     };
-  }, [walletAddress, restAPI]);
+  }, [walletAddress, restAPI, runtimeLifecycle]);
 
   const depositButton = (deposit: ApplicableInput | null, deposited: boolean, contractHeader: ContractHeader): JSX.Element => {
     if (deposited) {
