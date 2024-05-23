@@ -2,9 +2,9 @@ import { walletsSupported } from "@/constants/wallets-supported";
 
 export const WalletsSupported = () => {
   return (
-    <div>
-      <p className="text-m-disabled lg:text-lg">Wallets supported:</p>
-      <ul className="list-inside text-base text-m-disabled lg:text-lg">
+    <div className="flex flex-col space-y-1 font-normal p-1">
+      <p className="">Wallets supported:</p>
+      <ul className="pl-2">
         {walletsSupported.map((wallet) => (
           <li key={wallet}>{wallet}</li>
         ))}

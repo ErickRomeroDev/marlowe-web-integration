@@ -4,9 +4,10 @@ import {
     TooltipProvider,
     TooltipTrigger,
   } from "@/components/ui/tooltip";
+import React from "react";
   
   export interface HintProps {
-    label: string;
+    label: React.ReactNode;
     children: React.ReactNode;
     side?: "top" | "bottom" | "left" | "right";
     align?: "start" | "center" | "end";
