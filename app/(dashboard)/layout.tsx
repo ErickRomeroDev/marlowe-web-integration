@@ -30,7 +30,7 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
         </div>
       </div>
       {/* Mobile and Tablet Message */}
-      <div className="bg-white h-full mt-20">
+      <div className="bg-white h-full mt-20 md:hidden">
         <div className="text-start flex flex-col items-center p-4 space-y-4 pt-10">
           <Image src="monitor.svg" alt="desktop" height={120} width={120} />
           <h1 className="font-medium text-[17px] text-[#121216]">
