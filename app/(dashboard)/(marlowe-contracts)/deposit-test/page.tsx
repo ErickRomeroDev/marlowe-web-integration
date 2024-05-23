@@ -2,10 +2,9 @@ import { DepositTest } from "./_components/depositTest";
 
 const Deposit = () => {
   return (
-    <>
-    <span className="text-[20px] pl-5">Coming Soon!</span>
-      {/* <DepositTest /> */}
-    </>
+    <div className="flex h-[calc(100%-88px)] p-4">
+      <DepositTest />
+    </div>
   );
 };
 
