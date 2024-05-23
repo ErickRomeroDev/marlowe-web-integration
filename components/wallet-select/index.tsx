@@ -3,8 +3,7 @@
 import { type SupportedWalletName } from "@marlowe.io/wallet/browser";
 import Image from "next/image";
 import { useState } from "react";
-import { COLORS, ICON_SIZES, walletsSupported } from "@/constants";
-import { TailorButton, SIZE } from "@/components/tailor-button/tailorButton";
+import { ICON_SIZES, walletsSupported } from "@/constants";
 import { WalletsSupported } from "./walletSupported";
 import { useCardanoStore } from "@/hooks/use-cardano-store";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
