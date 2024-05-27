@@ -275,7 +275,7 @@ export const MyActiveContracts = () => {
                               </div>
                             </div>
                           ) : (
-                            <ContractInfoPlus contractInfo={contractInfo} />
+                            <ContractInfoPlus contractInfo={contractInfo} setWindow={setActiveDialogIndex} />
                           )}
                         </DialogContent>
                       </Dialog>

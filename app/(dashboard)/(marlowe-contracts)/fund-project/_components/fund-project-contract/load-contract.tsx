@@ -36,6 +36,7 @@ export const LoadContract = () => {
     undefined
   );
   const [loading, setLoading] = useState(false);
+  
 
   const runContracts = async (e: any, id: string) => {
     e.preventDefault();
@@ -103,6 +104,7 @@ export const LoadContract = () => {
         />
         {loading ? (
           <Button
+          disabled={loading} 
             className="rounded-[20px] h-[38px] w-[170px] gap-x-3 bg-[#9D78FF] hover:bg-[#9D78FF]/80"
             type="submit"
           >
@@ -117,7 +119,8 @@ export const LoadContract = () => {
           </Button>
         ) : (
           <Button
-            className="rounded-[20px] h-[38px] w-[170px] bg-[#9D78FF] hover:bg-[#9D78FF]/80"
+          
+          className="rounded-[20px] h-[38px] w-[170px] bg-[#9D78FF] hover:bg-[#9D78FF]/80"
             type="submit"
           >
             Load Contract
