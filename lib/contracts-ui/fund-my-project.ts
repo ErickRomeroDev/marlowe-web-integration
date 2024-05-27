@@ -50,7 +50,7 @@ type PaymentMissed = {
 };
 type Closed = {
   type: "Closed";
-  result: "Missed deposit" | "Payment released";
+  result: string;
   txSuccess: TransactionSuccess
 };
 
@@ -189,9 +189,9 @@ export function fundMyProjectGetState(
         return { type: "InitialState", txSuccess: txOut };
       }
     case "PaymentMissedClose":
-      return { type: "Closed", result: "Missed deposit", txSuccess: txOut };
+      return { type: "Closed", result: "Deposit period expired.", txSuccess: txOut };
     case "PaymentReleasedClose":
-      return { type: "Closed", result: "Payment released", txSuccess: txOut };
+      return { type: "Closed", result: "Funds released.", txSuccess: txOut };
   }
 }
 
@@ -200,10 +200,10 @@ export function fundMyProjectStatePlus(state: FundMyProjectState, scheme: FundMy
   switch (state.type) {
     case "InitialState":
       // console.log(`Waiting ${scheme.payer} to deposit ${scheme.amount}`);
-      return { printResult: `Waiting ${scheme.payer} to deposit ${scheme.amount}` };
+      return { printResult: `Awaiting  ${`${scheme.payer.substring(0, 6)}...${scheme.payer.slice(-6)}`} deposit of ${(Number(scheme.amount) / 1000000).toFixed(2)} ADA.` };
     case "PaymentMissed":
       // console.log(`Payment missed on ${scheme.depositDeadline}, contract can be closed to retrieve minUTXO`);
-      return { printResult: `Payment missed on ${scheme.depositDeadline}, contract can be closed to retrieve minUTXO` };
+      return { printResult: "Deposit period expired. Close contract to retrieve min eUTxO." };
     case "Closed":
       // console.log(`Contract closed: ${state.result}`);
       return { printResult: `Contract closed: ${state.result}` };
@@ -215,11 +215,7 @@ export function fundMyProjectGetActions(
   applicableAction: NewApplicableActionsAPI,
   contractState: FundMyProjectState
 ): FundMyProjectActions {
-  return [
-    {
-      name: "Re-check contract state",
-      value: { type: "check-state" },
-    },
+  return [    
     ...applicableAction.myActions.map((action) => {
       switch (action.type) {
         case "Advance":
@@ -231,17 +227,13 @@ export function fundMyProjectGetActions(
 
         case "Deposit":
           return {
-            name: `Deposit ${action.deposit.deposits} lovelaces`,
+            name: "Deposit",
             value: action,
           };
         default:
           throw new Error("Unexpected action type");
       }
-    }),
-    {
-      name: "Return to main menu",
-      value: { type: "return" },
-    },
+    }),    
   ];
 }
 

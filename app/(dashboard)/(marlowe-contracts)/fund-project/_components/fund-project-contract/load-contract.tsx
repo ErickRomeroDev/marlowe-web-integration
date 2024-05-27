@@ -4,10 +4,20 @@ import { ContractId } from "@marlowe.io/runtime-core";
 import { datetoTimeout } from "@marlowe.io/language-core-v1";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { FundMyProjectActions, FundMyProjectParameters, FundMyProjectState } from "@/lib/contracts-ui/fund-my-project";
+import {
+  FundMyProjectActions,
+  FundMyProjectParameters,
+  FundMyProjectState,
+} from "@/lib/contracts-ui/fund-my-project";
 import { SingleInputTx } from "@marlowe.io/language-core-v1/semantics";
 import { ContractInfoPlus } from "./contract-infoPlus";
-import { ContractInstanceAPI, NewApplicableActionsAPI } from "@marlowe.io/runtime-lifecycle/api";
+import {
+  ContractInstanceAPI,
+  NewApplicableActionsAPI,
+} from "@marlowe.io/runtime-lifecycle/api";
+import { toast } from "sonner";
+import { FundMeSkeleton } from "./myActive-contracts";
+import Image from "next/image";
 
 export type ContractInfo = {
   scheme: FundMyProjectParameters;
@@ -22,49 +32,111 @@ export type ContractInfo = {
 export const LoadContract = () => {
   const { restAPI, runtimeLifecycle, walletAddress } = useCardanoStore();
   const [contractId, setContractId] = useState<string>("");
-  const [contractInfo, setContractInfo] = useState<ContractInfo | undefined>(undefined);
+  const [contractInfo, setContractInfo] = useState<ContractInfo | undefined>(
+    undefined
+  );
+  const [loading, setLoading] = useState(false);
 
   const runContracts = async (e: any, id: string) => {
     e.preventDefault();
-    if (walletAddress && restAPI && runtimeLifecycle) {
-      const { fundMyProjectValidation, fundMyProjectGetState, fundMyProjectStatePlus, fundMyProjectGetActions } = await import(
-        "@/lib/contracts-ui/fund-my-project"
-      );
-      const cid = id as ContractId;
+    setLoading(true);
+    try {
+      if (walletAddress && restAPI && runtimeLifecycle) {
+        const {
+          fundMyProjectValidation,
+          fundMyProjectGetState,
+          fundMyProjectStatePlus,
+          fundMyProjectGetActions,
+        } = await import("@/lib/contracts-ui/fund-my-project");
+        const cid = id as ContractId;
 
-      const result = await fundMyProjectValidation(runtimeLifecycle, cid);
-      if (result === "InvalidMarloweTemplate" || result === "InvalidContract") {
-        return null;
+        const result = await fundMyProjectValidation(runtimeLifecycle, cid);
+        if (
+          result === "InvalidMarloweTemplate" ||
+          result === "InvalidContract"
+        ) {
+          return null;
+        }
+        const contractInstance =
+          await runtimeLifecycle.newContractAPI.load(cid);
+        const inputHistory = await contractInstance.getInputHistory();
+        const state = fundMyProjectGetState(
+          datetoTimeout(new Date()),
+          inputHistory,
+          result.sourceMap
+        );
+        const applicableActions =
+          await contractInstance.evaluateApplicableActions();
+        const choices = fundMyProjectGetActions(applicableActions, state);
+        const statePlus = fundMyProjectStatePlus(state, result.scheme);
+        const contractInfo = {
+          scheme: result.scheme,
+          inputHistory,
+          state,
+          statePlus,
+          choices,
+          contractInstance,
+          applicableActions,
+        };
+        console.log(contractInfo);
+        setContractInfo(contractInfo);
+        setLoading(false);
       }
-      const contractInstance = await runtimeLifecycle.newContractAPI.load(cid);
-      const inputHistory = await contractInstance.getInputHistory();
-      const state = fundMyProjectGetState(datetoTimeout(new Date()), inputHistory, result.sourceMap);
-      const applicableActions = await contractInstance.evaluateApplicableActions();
-      const choices = fundMyProjectGetActions(applicableActions, state);
-      const statePlus = fundMyProjectStatePlus(state, result.scheme);
-      const contractInfo = {
-        scheme: result.scheme,
-        inputHistory,
-        state,
-        statePlus,
-        choices,
-        contractInstance,
-        applicableActions,
-      };
-      console.log(contractInfo);
-      setContractInfo(contractInfo);
+    } catch (error) {
+      toast.error("Something went wrong");
+      setLoading(false);
     }
   };
 
   return (
-    <div className="flex flex-col space-y-4 py-8">
-      <div>Input ContractId: </div>
-      <form onSubmit={(e) => runContracts(e, contractId)} className="flex flex-col space-y-2">
-        <Input type="text" placeholder="Sponsor" value={contractId} onChange={(e) => setContractId(e.target.value)} />
-        <Button type="submit">Load Contract</Button>
+    <div className="flex flex-col bg-white shadow-md p-8 rounded-[30px] min-w-[600px] max-w-[700px]">
+      <form
+        onSubmit={(e) => runContracts(e, contractId)}
+        className="flex items-center space-x-2 pb-5"
+      >
+        <Input
+          className=" rounded-xl shadow h-[38px]"
+          type="text"
+          placeholder="Search for contract ID"
+          value={contractId}
+          onChange={(e) => setContractId(e.target.value)}
+        />
+        {loading ? (
+          <Button
+            className="rounded-[20px] h-[38px] w-[170px] gap-x-3 bg-[#9D78FF] hover:bg-[#9D78FF]/80"
+            type="submit"
+          >
+            <h1>Loading</h1>
+            <Image
+              className="animate-spin"
+              src="/loader-circle.svg"
+              alt="loading"
+              height={20}
+              width={20}
+            />
+          </Button>
+        ) : (
+          <Button
+            className="rounded-[20px] h-[38px] w-[170px] bg-[#9D78FF] hover:bg-[#9D78FF]/80"
+            type="submit"
+          >
+            Load Contract
+          </Button>
+        )}
       </form>
-      <div>See Contract Information:</div>
-      <ContractInfoPlus contractInfo={contractInfo} />
+      {loading ? (
+        <div className="flex flex-col space-y-4 p-4">
+          <h1 className="text-[22px] pb-5">Contract details</h1>
+          <FundMeSkeleton />
+          <FundMeSkeleton />
+          <FundMeSkeleton />
+          <div className="pt-4">
+            <FundMeSkeleton />
+          </div>
+        </div>
+      ) : (
+        <ContractInfoPlus contractInfo={contractInfo} />
+      )}
     </div>
   );
 };

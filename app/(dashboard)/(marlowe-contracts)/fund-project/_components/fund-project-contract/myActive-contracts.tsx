@@ -1,15 +1,30 @@
 "use client";
 
 import { useCardanoStore } from "@/hooks/use-cardano-store";
-import { ContractHeader, GetContractsRequest } from "@marlowe.io/runtime-rest-client/contract";
+import {
+  ContractHeader,
+  GetContractsRequest,
+} from "@marlowe.io/runtime-rest-client/contract";
 import { useEffect, useState } from "react";
 import { AddressBech32, ContractId } from "@marlowe.io/runtime-core";
-import { FundMyProjectActions, FundMyProjectParameters, FundMyProjectState } from "@/lib/contracts-ui/fund-my-project";
+import {
+  FundMyProjectActions,
+  FundMyProjectParameters,
+  FundMyProjectState,
+} from "@/lib/contracts-ui/fund-my-project";
 import { MarloweState, datetoTimeout } from "@marlowe.io/language-core-v1";
 import { SingleInputTx } from "@marlowe.io/language-core-v1/semantics";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { ContractInfoPlus } from "./contract-infoPlus";
-import { ContractInstanceAPI, NewApplicableActionsAPI } from "@marlowe.io/runtime-lifecycle/api";
+import {
+  ContractInstanceAPI,
+  NewApplicableActionsAPI,
+} from "@marlowe.io/runtime-lifecycle/api";
+import Image from "next/image";
+import { toast } from "sonner";
+import { Hint } from "@/components/hint";
+import Link from "next/link";
+import { Skeleton } from "@/components/ui/skeleton";
 
 type ContractInfoBasic = {
   header: ContractHeader;
@@ -29,17 +44,25 @@ export type ContractInfo = {
 
 export const MyActiveContracts = () => {
   const { restAPI, runtimeLifecycle, walletAddress } = useCardanoStore();
-  const [contractInfoBasic, setContractInfobasic] = useState<ContractInfoBasic[] | undefined>(undefined);
-  const [contractInfo, setContractInfo] = useState<ContractInfo | undefined>(undefined);
-  const [contractWindow, setContractWindow] = useState(false);
+  const [contractInfoBasic, setContractInfobasic] = useState<
+    ContractInfoBasic[] | undefined
+  >(undefined);
+  const [contractInfo, setContractInfo] = useState<ContractInfo | undefined>(
+    undefined
+  );
+  const [activeDialogIndex, setActiveDialogIndex] = useState<number | null>(null);
   const [loading, setLoading] = useState(false);
+  const [loadingInfo, setLoadingInfo] = useState(false);
   const tags_array = ["FUND_MY_PROJECT_VERSION_1", "FILTER-VERSION_1"];
 
   // get contract Info
   useEffect(() => {
     const runContractsBasic = async () => {
       if (walletAddress && restAPI && runtimeLifecycle) {
-        const { fundMyProjectMetadata } = await import("@/lib/contracts-ui/fund-my-project");
+        setLoading(true);
+        const { fundMyProjectMetadata } = await import(
+          "@/lib/contracts-ui/fund-my-project"
+        );
         const contractsRequest: GetContractsRequest = {
           tags: tags_array,
           partyAddresses: [walletAddress as AddressBech32],
@@ -48,7 +71,10 @@ export const MyActiveContracts = () => {
 
         const contractInfoBasic = await Promise.all(
           contractHeaders.contracts.map(async (item) => {
-            const result = await fundMyProjectMetadata(restAPI, item.contractId);
+            const result = await fundMyProjectMetadata(
+              restAPI,
+              item.contractId
+            );
             if (result === "InvalidMarloweTemplate") {
               return null;
             }
@@ -61,18 +87,22 @@ export const MyActiveContracts = () => {
         );
         console.log(contractInfoBasic);
         setContractInfobasic(contractInfoBasic);
+        setLoading(false);
       }
     };
     runContractsBasic();
   }, [walletAddress, restAPI, runtimeLifecycle]);
 
-  const runContracts = async (id: string) => {
+  const runContracts = async (id: string, index: number) => {
     if (walletAddress && restAPI && runtimeLifecycle) {
-      setContractWindow(true);
-      setLoading(true);
-      const { fundMyProjectValidation, fundMyProjectGetState, fundMyProjectStatePlus, fundMyProjectGetActions } = await import(
-        "@/lib/contracts-ui/fund-my-project"
-      );
+      setActiveDialogIndex(index);
+      setLoadingInfo(true);
+      const {
+        fundMyProjectValidation,
+        fundMyProjectGetState,
+        fundMyProjectStatePlus,
+        fundMyProjectGetActions,
+      } = await import("@/lib/contracts-ui/fund-my-project");
       const cid = id as ContractId;
 
       const result = await fundMyProjectValidation(runtimeLifecycle, cid);
@@ -81,8 +111,13 @@ export const MyActiveContracts = () => {
       }
       const contractInstance = await runtimeLifecycle.newContractAPI.load(cid);
       const inputHistory = await contractInstance.getInputHistory();
-      const state = fundMyProjectGetState(datetoTimeout(new Date()), inputHistory, result.sourceMap);
-      const applicableActions = await contractInstance.evaluateApplicableActions();
+      const state = fundMyProjectGetState(
+        datetoTimeout(new Date()),
+        inputHistory,
+        result.sourceMap
+      );
+      const applicableActions =
+        await contractInstance.evaluateApplicableActions();
       const choices = fundMyProjectGetActions(applicableActions, state);
       const statePlus = fundMyProjectStatePlus(state, result.scheme);
       const contractInfo = {
@@ -96,33 +131,168 @@ export const MyActiveContracts = () => {
       };
       console.log(contractInfo);
       setContractInfo(contractInfo);
-      setLoading(false);
+      setLoadingInfo(false);
     }
   };
 
-  const closeWindow = () => {
-    setContractWindow(false);
-    setContractInfo(undefined);
+  const closeWindow = () => {  
+    setActiveDialogIndex(null);          
+  };
+
+  const handleCopyToClipboard = async (text: string) => {
+    try {
+      await navigator.clipboard.writeText(text);
+      toast.success("Contract ID copied to clipboard!");
+    } catch (err) {
+      toast.error("Failed to copy contract id");
+    }
   };
 
   return (
-    <div>
-      My active contracts:{" "}
-      {contractInfoBasic &&
-        contractInfoBasic.map(
-          (item) =>
-            item && (
-              <div key={item.header.contractId}>
-                <div>{item.scheme.payee}</div>
-                <div className="cursor-pointer" onClick={() => runContracts(item.header.contractId)}>
-                  See more of this contract
-                </div>
-                <Dialog open={contractWindow} onOpenChange={closeWindow}>
-                  <DialogContent>{loading ? "loading" : <ContractInfoPlus contractInfo={contractInfo} />}</DialogContent>
-                </Dialog>
-              </div>
-            )
-        )}
+    <div className="flex flex-col bg-white shadow-md py-8 pr-8 pl-12 rounded-[30px] min-w-[800px]  h-4/5">
+      <div className="text-[22px]">Fund my project / Contracts</div>
+      {loading ? (
+        <>
+          <div className="grid grid-cols-[1.5fr,1.5fr,1fr,1fr,1fr,0.3fr] mt-7 mb-2 text-[14px] text-[#808191] pr-[14px]">
+            <div className="">Contract ID</div>
+            <div className=" pl-3">Project name</div>
+            <div className="text-center">Project Link</div>
+            <div className="text-center">Amount</div>
+            <div className="text-center">Deadline</div>
+            <div></div>
+          </div>
+          <div className="flex flex-col space-y-5 mt-5">
+            <FundMeSkeleton />
+            <FundMeSkeleton />
+            <FundMeSkeleton />
+            <FundMeSkeleton />
+          </div>
+        </>
+      ) : 
+       contractInfoBasic?.length === 0 ? (
+        <div className="flex flex-col flex-grow space-y-4 items-center justify-center">
+          <Image 
+          src="no-projects.svg"
+          alt="no projects"
+          height={90}
+          width={90}
+          />
+          <span className="text-[16px] text-[#808191]">No projects to fund</span>
+        </div>
+      ) :
+      (
+        <>
+          <div className="grid grid-cols-[1.5fr,1.5fr,1fr,1fr,1fr,0.3fr] mt-7 mb-2 text-[14px] text-[#808191] pr-[14px]">
+            <div className="">Contract ID</div>
+            <div className=" pl-3">Project name</div>
+            <div className="text-center">Project Link</div>
+            <div className="text-center">Amount</div>
+            <div className="text-center">Deadline</div>
+            <div></div>
+          </div>
+          <ul className="overflow-y-auto flex-grow mb-2">
+            {contractInfoBasic &&
+              contractInfoBasic.map(
+                (item, index) =>
+                  item && (
+                    <li
+                      className="text-[#121216] items-center  text-[14px] my-5  grid grid-cols-[1.5fr,1.5fr,1fr,1fr,1fr,0.3fr]"
+                      key={item.header.contractId}
+                    >
+                      <div className="flex gap-x-2.5 items-center">
+                        {`${item.header.contractId.substring(0, 6)}...${item.header.contractId.slice(-6)}`}
+                        <Image
+                          className="cursor-pointer"
+                          src="/copy-purple.svg"
+                          alt="Copy"
+                          width={15}
+                          height={15}
+                          onClick={() =>
+                            handleCopyToClipboard(item.header.contractId)
+                          }
+                        />
+                      </div>
+                      <div className="text-start pl-3">
+                        {item.scheme.projectName}
+                      </div>
+                      <div className="flex justify-center">
+                        <Link
+                          href={item.scheme.githubUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                        >
+                          <button className="h-[38px] rounded-[15px] bg-[#F5F5F8] px-5 hover:bg-[#fafafa]">
+                            <Image
+                              src="/paper-clip.svg"
+                              alt="clip"
+                              width={15}
+                              height={15}
+                            />
+                          </button>
+                        </Link>
+                      </div>
+                      <div className="text-center">
+                        {(Number(item.scheme.amount) / 1000000).toFixed(2)} ADA
+                      </div>
+                      <div className="w-auto text-center ">
+                        {item.scheme.depositDeadline.getMonth()}/
+                        {item.scheme.depositDeadline.getDate()}
+                        <span> </span>
+                        {item.scheme.depositDeadline.getHours()}:
+                        {item.scheme.depositDeadline.getMinutes()}
+                      </div>
+                      <div>
+                        <Hint
+                          label="more info"
+                          side="bottom"
+                          align="start"
+                          sideOffset={5}
+                        >
+                          <button
+                            className="cursor-pointer rounded-[15px] h-[38px] hover:bg-[#fafafa]"
+                            onClick={() => runContracts(item.header.contractId, index)}
+                          >
+                            <Image
+                              src="/ellipsis.svg"
+                              alt="info"
+                              width={22}
+                              height={22}
+                            />
+                          </button>
+                        </Hint>
+                      </div>
+                      <>{console.log(index)}</>
+                      <Dialog open={activeDialogIndex === index} onOpenChange={closeWindow}>
+                        <DialogContent>
+                          {loadingInfo ? (
+                            <div className="flex flex-col space-y-4 p-4">
+                              <h1 className="text-[22px] pb-5">Contract details</h1>
+                              <FundMeSkeleton />
+                              <FundMeSkeleton />
+                              <FundMeSkeleton />
+                              <div className="pt-4">
+                                <FundMeSkeleton />
+                              </div>
+                            </div>
+                          ) : (
+                            <ContractInfoPlus contractInfo={contractInfo} />
+                          )}
+                        </DialogContent>
+                      </Dialog>
+                    </li>
+                  )
+              )}
+          </ul>
+        </>
+      )}
+    </div>
+  );
+};
+
+export const FundMeSkeleton = () => {
+  return (
+    <div className="rounded-[15px] h-[38px] w-full bg-[#F5F5F8] ">
+      <Skeleton />
     </div>
   );
 };
