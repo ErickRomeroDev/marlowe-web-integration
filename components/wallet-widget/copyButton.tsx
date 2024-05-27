@@ -25,7 +25,7 @@ export const CopyButton = ({ text }: CopyButtonProps) => {
         <div>
           <Hint
           label="copy address"
-          side="bottom"
+          side="right"
           align="start"
           sideOffset={14}
           >

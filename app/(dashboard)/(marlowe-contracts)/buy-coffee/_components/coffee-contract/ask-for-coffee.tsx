@@ -13,7 +13,6 @@ import {
   mkDepositContract,
 } from "@/marlowe-contracts-cli/src/contract-deposit/mk-deposit-contract";
 
-import { cn } from "@/lib/utils";
 import {
   Form,
   FormControl,

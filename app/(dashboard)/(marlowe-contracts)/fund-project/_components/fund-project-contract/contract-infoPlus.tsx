@@ -1,12 +1,17 @@
 import { FundMyProjectActions } from "@/lib/contracts-ui/fund-my-project";
 import { ContractInfo } from "./load-contract";
 import { useCardanoStore } from "@/hooks/use-cardano-store";
+import Image from "next/image";
+import { toast } from "sonner";
+import Link from "next/link";
 
 interface ContractInfoPlusInterface {
   contractInfo: ContractInfo | undefined;
 }
 
-export const ContractInfoPlus = ({ contractInfo }: ContractInfoPlusInterface) => {
+export const ContractInfoPlus = ({
+  contractInfo,
+}: ContractInfoPlusInterface) => {
   const { runtimeLifecycle } = useCardanoStore();
 
   const applyContractInput = async (action: FundMyProjectActions[number]) => {
@@ -15,29 +20,113 @@ export const ContractInfoPlus = ({ contractInfo }: ContractInfoPlusInterface) =>
         case "check-state":
           return console.log("check state");
         case "return":
-          return;
+          return console.log("return");
         case "Advance":
         case "Deposit":
           console.log("Applying input");
-          const applicableInput = await contractInfo.applicableActions.toInput(action.value);
+          const applicableInput = await contractInfo.applicableActions.toInput(
+            action.value
+          );
           const txId = await contractInfo.applicableActions.apply({
             input: applicableInput,
           });
           console.log(`Input applied with txId ${txId}`);
           await runtimeLifecycle.wallet.waitConfirmation(txId);
-          console.log(`Input applied with txId ${txId} submitted to the blockchain`);
+          console.log(
+            `Input applied with txId ${txId} submitted to the blockchain`
+          );
       }
     }
   };
 
+  const handleCopyToClipboard = async (text: string) => {
+    try {
+      await navigator.clipboard.writeText(text);
+      toast.success("Contract ID copied to clipboard!");
+    } catch (err) {
+      toast.error("Failed to copy contract id");
+    }
+  };
+
   return (
-    <div className="space-y-4">
-      {contractInfo?.choices.map((item) => (
-        <div key={item.name} onClick={() => applyContractInput(item)}>
-          <div>{item.name}</div>
-          <div>{item.description}</div>
+    <>
+      {contractInfo && (
+        <div className="space-y-4 p-4 text-[14px] text-[#121216]">
+          <h1 className="text-[22px]">Contract details</h1>
+          <div className="flex justify-between text-[#121216]">
+            <section className="flex flex-col gap-y-1">
+              <h1 className="text-[#808191]">Contract ID</h1>
+              <div className="flex gap-x-2.5 items-center">
+                {`${contractInfo.contractInstance.id.substring(0, 6)}...${contractInfo?.contractInstance.id.slice(-6)}`}
+                <Image
+                  className="cursor-pointer"
+                  src="/copy-purple.svg"
+                  alt="Copy"
+                  width={15}
+                  height={15}
+                  onClick={() =>
+                    handleCopyToClipboard(contractInfo.contractInstance.id)
+                  }
+                />
+              </div>
+            </section>
+            <section className="flex flex-col gap-y-1">
+              <h1 className="text-[#808191]">Project name</h1>
+              <div>{contractInfo?.scheme.projectName}</div>
+            </section>
+            <section className="flex flex-col gap-y-1">
+              <h1 className="text-[#808191]">Amount</h1>
+              <div>
+                {(Number(contractInfo.scheme.amount) / 1000000).toFixed(2)} ADA
+              </div>
+            </section>
+          </div>
+          <div className="flex h-[38px] justify-between">
+            <div className="flex gap-x-3 items-center bg-[#F5F5F8] px-5 rounded-[20px]">
+              <span className="text-[#808191]">Deposit Deadline</span>
+              <p className="text-[#F33149]">
+                {contractInfo.scheme.depositDeadline.getMonth()}/
+                {contractInfo.scheme.depositDeadline.getDate()}
+                <span> </span>
+                {contractInfo.scheme.depositDeadline.getHours()}:
+                {contractInfo.scheme.depositDeadline.getMinutes()}
+              </p>
+            </div>
+            <Link
+              href={contractInfo.scheme.githubUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              <button className="cursor-pointer h-full flex gap-x-3 items-center bg-[#F5F5F8] px-12 rounded-[20px]">
+                <Image
+                  src="/paper-clip-sm.svg"
+                  alt="clip"
+                  width={15}
+                  height={15}
+                />
+                <h1 className="text-[#808191]">Project Link</h1>
+              </button>
+            </Link>
+          </div>
+          <div>
+            <h1 className="text-[#808191] pl-2">Status</h1>
+            <p className="flex items-center h-[38px] bg-[#F5F5F8] justify-center rounded-[20px]">
+              {contractInfo.statePlus.printResult}
+            </p>
+          </div>
+          <div className="pt-4">
+            {contractInfo.choices.map((item) => (
+              <button
+                className="cursor-pointer flex items-center h-[38px] rounded-[30px] w-full justify-center bg-[#9D78FF] hover:bg-[#9D78FF]/80   text-white"
+                key={item.name}
+                onClick={() => applyContractInput(item)}
+              >
+                {item.name}
+              </button>
+            ))}
+          </div>
         </div>
-      ))}
-    </div>
+      )}
+    </>
   );
 };
