@@ -1,41 +1,65 @@
+"use client";
+
 import { FundMyProjectActions } from "@/lib/contracts-ui/fund-my-project";
 import { ContractInfo } from "./load-contract";
 import { useCardanoStore } from "@/hooks/use-cardano-store";
 import Image from "next/image";
 import { toast } from "sonner";
 import Link from "next/link";
+import { Dispatch, SetStateAction, useState } from "react";
+import { Button } from "@/components/ui/button";
 
 interface ContractInfoPlusInterface {
   contractInfo: ContractInfo | undefined;
+  setWindow?: Dispatch<SetStateAction<number | null>>;
 }
 
 export const ContractInfoPlus = ({
   contractInfo,
+  setWindow,
 }: ContractInfoPlusInterface) => {
+  const [loading, setLoading] = useState(false);
+  const [submitted, setSubmitted] = useState(false);
   const { runtimeLifecycle } = useCardanoStore();
 
   const applyContractInput = async (action: FundMyProjectActions[number]) => {
-    if (runtimeLifecycle && contractInfo) {
-      switch (action.value.type) {
-        case "check-state":
-          return console.log("check state");
-        case "return":
-          return console.log("return");
-        case "Advance":
-        case "Deposit":
-          console.log("Applying input");
-          const applicableInput = await contractInfo.applicableActions.toInput(
-            action.value
-          );
-          const txId = await contractInfo.applicableActions.apply({
-            input: applicableInput,
-          });
-          console.log(`Input applied with txId ${txId}`);
-          await runtimeLifecycle.wallet.waitConfirmation(txId);
-          console.log(
-            `Input applied with txId ${txId} submitted to the blockchain`
-          );
+    try {
+      if (runtimeLifecycle && contractInfo) {
+        setLoading(true);
+        switch (action.value.type) {
+          case "check-state":
+            return console.log("check state");
+          case "return":
+            return console.log("return");
+          case "Advance":
+          case "Deposit":
+            console.log("Applying input");
+            const applicableInput =
+              await contractInfo.applicableActions.toInput(action.value);
+            const txId = await contractInfo.applicableActions.apply({
+              input: applicableInput,
+            });
+            toast.success(
+              "Your transaction was created. Processing may take 10 to 30 seconds. Please wait..."
+            );
+            console.log(`Input applied with txId ${txId}`);
+            await runtimeLifecycle.wallet.waitConfirmation(txId);
+            console.log(
+              `Input applied with txId ${txId} submitted to the blockchain`
+            );
+            toast.success(
+              "Your transaction was successfully submitted to the blockchain"
+            );
+            setLoading(false);
+            setSubmitted(true);
+        }
       }
+      if (setWindow) {
+        setWindow(null);
+      }
+    } catch (error) {
+      setLoading(false);
+      toast.error("Something went wrong.");
     }
   };
 
@@ -115,15 +139,38 @@ export const ContractInfoPlus = ({
             </p>
           </div>
           <div className="pt-4">
-            {contractInfo.choices.map((item) => (
-              <button
-                className="cursor-pointer flex items-center h-[38px] rounded-[30px] w-full justify-center bg-[#9D78FF] hover:bg-[#9D78FF]/80   text-white"
-                key={item.name}
-                onClick={() => applyContractInput(item)}
+            {submitted ? (
+              <Button 
+              disabled
+              className="flex items-center h-[38px] rounded-[30px] w-full justify-center bg-[#9D78FF] hover:bg-[#9D78FF]/80   text-white"
               >
-                {item.name}
-              </button>
-            ))}
+                Tx submitted
+              </Button>
+            ) : (
+              contractInfo.choices.map((item) => (
+                <Button
+                  className="cursor-pointer flex items-center h-[38px] rounded-[30px] w-full justify-center bg-[#9D78FF] hover:bg-[#9D78FF]/80   text-white"
+                  key={item.name}
+                  disabled={loading}
+                  onClick={() => applyContractInput(item)}
+                >
+                  {loading ? (
+                    <div className="flex gap-x-3">
+                      <span>Processing</span>
+                      <Image
+                        className="animate-spin"
+                        src="/loader-circle.svg"
+                        alt="loading"
+                        height={20}
+                        width={20}
+                      />
+                    </div>
+                  ) : (
+                    <h1>{item.name}</h1>
+                  )}
+                </Button>
+              ))
+            )}
           </div>
         </div>
       )}
