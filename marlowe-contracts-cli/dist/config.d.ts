@@ -1,4 +1,4 @@
-import * as t from "io-ts/lib/index.js";
+import * as t from "io-ts";
 declare const configGuard: t.TypeC<{
     blockfrostProjectId: t.StringC;
     blockfrostUrl: t.StringC;

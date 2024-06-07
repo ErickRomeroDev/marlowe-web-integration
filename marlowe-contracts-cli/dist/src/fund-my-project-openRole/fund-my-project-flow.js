@@ -8,6 +8,7 @@ import { bech32Validator, dateInFutureValidator, positiveBigIntValidator, waitIn
 import { mkSourceMap } from "../utils/experimental-features/source-map.js";
 import { datetoTimeout } from "@marlowe.io/language-core-v1";
 import { fundMyProjectGetActions, fundMyProjectGetState, fundMyProjectStatePlus, fundMyProjectTag, fundMyProjectTemplate, fundMyProjectValidation, mkFundMyProject, } from "./fund-my-project.js";
+import { mintRole } from "@marlowe.io/runtime-rest-client/contract";
 // When this script is called, start with main.
 main();
 async function main() {
@@ -59,7 +60,7 @@ async function mainLoop(lifecycleNami, lifecycleLace, rewardAddress) {
                     await loadContractMenu(lifecycleLace, lifecycleNami);
                     break;
                 case "download":
-                    await downloadMenu(lifecycleNami);
+                    await downloadMenu(lifecycleLace);
                     break;
                 case "exit":
                     process.exit(0);
@@ -80,21 +81,71 @@ async function mainLoop(lifecycleNami, lifecycleLace, rewardAddress) {
     }
 }
 export async function downloadMenu(lifecycleNami) {
-    const tags_array = ["FUND_MY_PROJECT_VERSION_1", "FILTER-VERSION_1"];
+    const tags_array = ["CONTRACT_VERSION_3"];
+    //Address option
     const [walletAddress] = await lifecycleNami.wallet.getUsedAddresses();
     const contractsRequest = {
         tags: tags_array,
-        partyAddresses: [walletAddress],
     };
     const contractHeaders = await lifecycleNami.restClient.getContracts(contractsRequest);
-    console.log(contractHeaders.page);
-    await Promise.all(contractHeaders.contracts.map(async (item) => {
+    const contractHeadersContracts = contractHeaders.contracts;
+    // console.log(contractHeadersContracts);
+    const contractHeaderFilteredByOpenRole = await Promise.all(contractHeadersContracts.map(async (item) => {
+        try {
+            const contractInstance = await lifecycleNami.newContractAPI.load(item.contractId);
+            const details = await contractInstance.getDetails();
+            if (details.type === "closed") {
+                return undefined;
+            }
+            const history = await contractInstance.getInputHistory();
+            const applicableActions = await lifecycleNami.applicableActions.getApplicableActions(details);
+            const depositAvailable = applicableActions.some(item => item.type === "Deposit");
+            if (history.length === 0 && depositAvailable) {
+                return item;
+            }
+            // console.log("details type",details.type);
+            // console.log("history",history.length);
+            // console.log("applicableActions",applicableActions)
+            // console.log("depositAvailable",depositAvailable)
+        }
+        catch (error) {
+            return undefined;
+        }
+    }));
+    console.log("contractHeaderFilteredByOpenRole", contractHeaderFilteredByOpenRole);
+    //Filter token option
+    // const contractsRequest: GetContractsRequest = {
+    //   tags: tags_array,
+    // };
+    // const contractHeaders = await lifecycleNami.restClient.getContracts(contractsRequest);
+    // const walletTokens = await lifecycleNami.wallet.getTokens();
+    // const tokenAssetName = "payer" as string;
+    // //filter those contracts that have Policy ID, if they dont have one they have ""
+    // const filteredByRoleTokenMintingPolicy = contractHeaders.contracts.filter((header) => header.roleTokenMintingPolicyId);
+    // console.log("filteredByRoleTokenMintingPolicy", filteredByRoleTokenMintingPolicy);
+    // //predicate
+    // const filteredByWalletTokens = (header: ContractHeader): boolean => {
+    //   return walletTokens.some(
+    //     (item) => item.assetId.policyId === header.roleTokenMintingPolicyId && item.assetId.assetName === tokenAssetName
+    //   );
+    // };
+    // //filter by tokens on the wallet
+    // const contractHeaderFilteredByWallet = filteredByRoleTokenMintingPolicy.filter((header) => filteredByWalletTokens(header));
+    // console.log("contractHeaderFilteredByWallet", contractHeaderFilteredByWallet);
+    await Promise.all(contractHeaderFilteredByOpenRole.map(async (item) => {
+        if (item === undefined) {
+            return null;
+        }
         try {
             const result = await fundMyProjectValidation(lifecycleNami, item.contractId);
             if (result === "InvalidMarloweTemplate" || result === "InvalidContract") {
-                throw new Error("invalid");
+                // throw new Error("invalid");
+                console.log("invalid");
+                return;
             }
             const contractInstance = await lifecycleNami.newContractAPI.load(item.contractId);
+            const details = await contractInstance.getDetails();
+            console.log("details", details);
             const inputHistory = await contractInstance.getInputHistory();
             const contractState = fundMyProjectGetState(datetoTimeout(new Date()), inputHistory, result.sourceMap);
             console.log("contractState", contractState);
@@ -130,6 +181,11 @@ export async function createContractMenu(lifecycleNami, lifecycleLace, rewardAdd
         validate: dateInFutureValidator,
     });
     const depositDeadline = new Date(depositDeadlineStr);
+    const releaseDeadlineStr = await input({
+        message: "Enter the deposit deadline",
+        validate: dateInFutureValidator,
+    });
+    const releaseDeadline = new Date(releaseDeadlineStr);
     const projectName = await input({
         message: "Enter the project name",
     });
@@ -146,8 +202,22 @@ export async function createContractMenu(lifecycleNami, lifecycleLace, rewardAdd
         payee: walletAddress,
         amount,
         depositDeadline,
+        releaseDeadline,
         projectName,
         githubUrl,
+    };
+    const tokenMetadata = {
+        name: "VC Token",
+        description: "These tokens give access to deposit on the contract",
+        image: "ipfs://QmaQMH7ybS9KmdYQpa4FMtAhwJH5cNaacpg4fTwhfPvcwj",
+        mediaType: "image/png",
+        files: [
+            {
+                name: "icon-1000",
+                mediaType: "image/webp",
+                src: "ipfs://QmUbvavFxGSSEo3ipQf7rjrELDvXHDshWkHZSpV8CVdSE5",
+            },
+        ],
     };
     const metadata = fundMyProjectTemplate.toMetadata(scheme);
     const sourceMap = await mkSourceMap(lifecycleNami, mkFundMyProject(scheme));
@@ -155,13 +225,14 @@ export async function createContractMenu(lifecycleNami, lifecycleLace, rewardAdd
         stakeAddress: rewardAddress,
         tags: fundMyProjectTag,
         metadata,
+        roles: { payer: mintRole("OpenRole", 1n, tokenMetadata) },
     });
     console.log(`Contract created with id ${contractInstance.id}`);
     // this is another option to wait for a tx when using the instance of the contract
     // await contractInstance.waitForConfirmation();
     await waitIndicator(lifecycleNami.wallet, contractIdToTxId(contractInstance.id));
     console.log(`Contract id ${contractInstance.id} was successfully submited to the blockchain`);
-    return contractMenu(lifecycleNami.wallet, lifecycleLace.wallet, contractInstance, scheme, sourceMap);
+    return contractMenu(lifecycleNami.wallet, lifecycleLace.wallet, contractInstance, scheme, sourceMap, lifecycleLace);
 }
 /**
  * This is an Inquirer.js flow to load an existing contract
@@ -193,13 +264,17 @@ async function loadContractMenu(lifecycleLace, lifecycleNami) {
     console.log(`  Project Name: ${validationResult.scheme.projectName}`);
     console.log(`  Project Github: ${validationResult.scheme.githubUrl}`);
     const contractInstance = await lifecycleLace.newContractAPI.load(cid);
-    return contractMenu(lifecycleNami.wallet, lifecycleLace.wallet, contractInstance, validationResult.scheme, validationResult.sourceMap);
+    return contractMenu(lifecycleNami.wallet, lifecycleLace.wallet, contractInstance, validationResult.scheme, validationResult.sourceMap, lifecycleLace);
 }
 /**
  * This is an Inquirer.js flow to interact with a contract
  */
-async function contractMenu(walletNami, walletLace, contractInstance, scheme, sourceMap) {
+async function contractMenu(walletNami, walletLace, contractInstance, scheme, sourceMap, lifecycleLace) {
     const inputHistory = await contractInstance.getInputHistory();
+    const details = await contractInstance.getDetails();
+    if (details.type === "closed") {
+        return;
+    }
     // console.log({ inputHistory });
     const contractState = fundMyProjectGetState(datetoTimeout(new Date()), inputHistory, sourceMap);
     // console.log({ contractState });
@@ -216,19 +291,25 @@ async function contractMenu(walletNami, walletLace, contractInstance, scheme, so
     });
     switch (selectedAction.type) {
         case "check-state":
-            return contractMenu(walletNami, walletLace, contractInstance, scheme, sourceMap);
+            return contractMenu(walletNami, walletLace, contractInstance, scheme, sourceMap, lifecycleLace);
         case "return":
             return;
         case "Advance":
         case "Deposit":
             console.log("Applying input");
             const applicableInput = await applicableActions.toInput(selectedAction);
+            console.log("applicableInput", applicableInput);
+            //modern way
             const txId = await applicableActions.apply({
                 input: applicableInput,
             });
+            //old way
+            // const txId = await lifecycleLace.applicableActions.applyInput(details.contractId, {
+            //   input: applicableInput,
+            // })
             console.log(`Input applied with txId ${txId}`);
             await waitIndicator(walletLace, txId);
-            return contractMenu(walletNami, walletLace, contractInstance, scheme, sourceMap);
+            return contractMenu(walletNami, walletLace, contractInstance, scheme, sourceMap, lifecycleLace);
     }
 }
 //# sourceMappingURL=fund-my-project-flow.js.map

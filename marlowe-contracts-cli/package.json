@@ -7,6 +7,9 @@
     "deposit-contract": "npx tsc && node dist/src/contract-depositv2/deposit-contract.js",
     "delay-payment": "npx tsc && node dist/src/delay-payment/delay-payment-flow.js",
     "fund-my-project": "npx tsc && node dist/src/fund-my-project/fund-my-project-flow.js",
+    "fund-my-project-role": "npx tsc && node dist/src/fund-my-project-role/fund-my-project-flow.js",
+    "giftCard": "npx tsc && node dist/src/gift-card/giftCard-flow.js",
+    "vesting": "npx tsc && node dist/src/vesting/vesting-flow.js",
     "test": "jest",
     "test:deposit-contract": "jest src/contract-depositv2/deposit-contract.test.ts"
   },

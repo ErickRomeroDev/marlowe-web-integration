@@ -1,13 +1,14 @@
 import { Blockfrost, Lucid } from "lucid-cardano";
 import { readConfig } from "../../config.js";
-import { addressBech32, contractId, contractIdToTxId, stakeAddressBech32, } from "@marlowe.io/runtime-core";
+import { addressBech32, contractId, contractIdToTxId, payoutId, stakeAddressBech32, } from "@marlowe.io/runtime-core";
 import { mkLucidWallet } from "@marlowe.io/wallet";
 import { mkRuntimeLifecycle } from "@marlowe.io/runtime-lifecycle";
 import { input, select } from "@inquirer/prompts";
 import { bech32Validator, dateInFutureValidator, positiveBigIntValidator, waitIndicator } from "../utils/utils.js";
 import { mkSourceMap } from "../utils/experimental-features/source-map.js";
 import { datetoTimeout } from "@marlowe.io/language-core-v1";
-import { fundMyProjectGetActions, fundMyProjectGetState, fundMyProjectStatePlus, fundMyProjectTag, fundMyProjectTemplate, fundMyProjectValidation, mkFundMyProject, } from "./fund-my-project.js";
+import { projectGetActions, projectGetState, projectStatePlus, projectTag, projectTemplate, projectValidation, mkProject, } from "./giftCard.js";
+import { mintRole } from "@marlowe.io/runtime-rest-client/contract";
 // When this script is called, start with main.
 main();
 async function main() {
@@ -47,7 +48,10 @@ async function mainLoop(lifecycleNami, lifecycleLace, rewardAddress) {
                 choices: [
                     { name: "Create a contract", value: "create" },
                     { name: "Load a contract", value: "load" },
-                    { name: "See contracts", value: "download" },
+                    { name: "See contracts filterd by Address", value: "downloadByAddress" },
+                    { name: "See contracts filtered by Token", value: "downloadByToken" },
+                    { name: "Download Payouts", value: "downloadPayouts" },
+                    { name: "withDrawPayouts", value: "withDrawPayouts" },
                     { name: "Exit", value: "exit" },
                 ],
             });
@@ -58,8 +62,17 @@ async function mainLoop(lifecycleNami, lifecycleLace, rewardAddress) {
                 case "load":
                     await loadContractMenu(lifecycleLace, lifecycleNami);
                     break;
-                case "download":
-                    await downloadMenu(lifecycleNami);
+                case "downloadByToken":
+                    await downloadMenuByToken(lifecycleLace);
+                    break;
+                case "downloadByAddress":
+                    await downloadMenuByAddress(lifecycleNami);
+                    break;
+                case "downloadPayouts":
+                    await downloadPayouts(lifecycleLace);
+                    break;
+                case "withDrawPayouts":
+                    await withDrawPayouts(lifecycleLace);
                     break;
                 case "exit":
                     process.exit(0);
@@ -79,29 +92,79 @@ async function mainLoop(lifecycleNami, lifecycleLace, rewardAddress) {
         }
     }
 }
-export async function downloadMenu(lifecycleNami) {
-    const tags_array = ["FUND_MY_PROJECT_VERSION_1", "FILTER-VERSION_1"];
+export async function downloadMenuByToken(lifecycleNami) {
+    const tags_array = ["GIFTCARD"];
+    //Filter token option
+    const contractsRequest = {
+        tags: tags_array,
+    };
+    const contractHeaders = await lifecycleNami.restClient.getContracts(contractsRequest);
+    const walletTokens = await lifecycleNami.wallet.getTokens();
+    const tokenAssetName = "payee";
+    //filter those contracts that have Policy ID, if they dont have one they have ""
+    const filteredByRoleTokenMintingPolicy = contractHeaders.contracts.filter((header) => header.roleTokenMintingPolicyId);
+    //predicate
+    const filteredByWalletTokens = (header) => {
+        return walletTokens.some((item) => item.assetId.policyId === header.roleTokenMintingPolicyId && item.assetId.assetName === tokenAssetName);
+    };
+    //filter by tokens on the wallet
+    const contractHeaderFilteredByWallet = filteredByRoleTokenMintingPolicy.filter((header) => filteredByWalletTokens(header));
+    console.log("contractHeaderFilteredByToken", contractHeaderFilteredByWallet);
+    await Promise.all(contractHeaderFilteredByWallet.map(async (item) => {
+        try {
+            const result = await projectValidation(lifecycleNami, item.contractId);
+            if (result === "InvalidMarloweTemplate" || result === "InvalidContract") {
+                // throw new Error("invalid");
+                console.log("invalid");
+                return;
+            }
+            const contractInstance = await lifecycleNami.newContractAPI.load(item.contractId);
+            const details = await contractInstance.getDetails();
+            console.log("details", details);
+            const inputHistory = await contractInstance.getInputHistory();
+            const contractState = projectGetState(datetoTimeout(new Date()), inputHistory, result.sourceMap);
+            console.log("contractState", contractState);
+            if (contractState.type !== "Closed") {
+                projectStatePlus(contractState, result.scheme);
+                const applicableActions = await contractInstance.evaluateApplicableActions();
+                const choices = projectGetActions(applicableActions, contractState);
+                console.log("choices", choices);
+            }
+        }
+        catch (error) {
+            console.log("error", error);
+        }
+    }));
+}
+export async function downloadMenuByAddress(lifecycleNami) {
+    const tags_array = ["GIFTCARD"];
+    //Address option
     const [walletAddress] = await lifecycleNami.wallet.getUsedAddresses();
     const contractsRequest = {
         tags: tags_array,
         partyAddresses: [walletAddress],
     };
     const contractHeaders = await lifecycleNami.restClient.getContracts(contractsRequest);
-    console.log(contractHeaders.page);
-    await Promise.all(contractHeaders.contracts.map(async (item) => {
+    const contractHeaderFilteredByWallet = contractHeaders.contracts;
+    console.log("header", contractHeaderFilteredByWallet);
+    await Promise.all(contractHeaderFilteredByWallet.map(async (item) => {
         try {
-            const result = await fundMyProjectValidation(lifecycleNami, item.contractId);
+            const result = await projectValidation(lifecycleNami, item.contractId);
             if (result === "InvalidMarloweTemplate" || result === "InvalidContract") {
-                throw new Error("invalid");
+                // throw new Error("invalid");
+                console.log("invalid");
+                return;
             }
             const contractInstance = await lifecycleNami.newContractAPI.load(item.contractId);
+            const details = await contractInstance.getDetails();
+            console.log("details", details);
             const inputHistory = await contractInstance.getInputHistory();
-            const contractState = fundMyProjectGetState(datetoTimeout(new Date()), inputHistory, result.sourceMap);
+            const contractState = projectGetState(datetoTimeout(new Date()), inputHistory, result.sourceMap);
             console.log("contractState", contractState);
             if (contractState.type !== "Closed") {
-                fundMyProjectStatePlus(contractState, result.scheme);
+                projectStatePlus(contractState, result.scheme);
                 const applicableActions = await contractInstance.evaluateApplicableActions();
-                const choices = fundMyProjectGetActions(applicableActions, contractState);
+                const choices = projectGetActions(applicableActions, contractState);
                 console.log("choices", choices);
             }
         }
@@ -116,8 +179,8 @@ export async function downloadMenu(lifecycleNami) {
  * @param rewardAddress An optional reward address to stake the contract rewards
  */
 export async function createContractMenu(lifecycleNami, lifecycleLace, rewardAddress) {
-    const payer = addressBech32(await input({
-        message: "Enter the VC address",
+    const payee = addressBech32(await input({
+        message: "Enter the Beneficiary Address",
         validate: bech32Validator,
     }));
     const amountStr = await input({
@@ -131,30 +194,40 @@ export async function createContractMenu(lifecycleNami, lifecycleLace, rewardAdd
     });
     const depositDeadline = new Date(depositDeadlineStr);
     const projectName = await input({
-        message: "Enter the project name",
-    });
-    const githubUrl = await input({
-        message: "Enter the githubUrl",
+        message: "Enter the Beneficiary name",
     });
     const walletAddress = (await lifecycleNami.wallet.getUsedAddresses())[0];
-    console.log(`Fund my project:\n * from  ${payer}\n * to ${walletAddress}\n * for ${amount} lovelaces\n`);
+    console.log(`Send GitfCard:\n * to  ${payee}\n * to ${walletAddress}\n * for ${amount} lovelaces\n`);
     if (rewardAddress) {
         console.log(`In the meantime, the contract will stake rewards to ${rewardAddress}`);
     }
     const scheme = {
-        payer,
-        payee: walletAddress,
+        payer: walletAddress,
+        payee,
         amount,
         depositDeadline,
         projectName,
-        githubUrl,
     };
-    const metadata = fundMyProjectTemplate.toMetadata(scheme);
-    const sourceMap = await mkSourceMap(lifecycleNami, mkFundMyProject(scheme));
+    const tokenMetadata = {
+        name: `${projectName}-GIFT-CARD`,
+        description: "Gift Card present",
+        image: "ipfs://QmaQMH7ybS9KmdYQpa4FMtAhwJH5cNaacpg4fTwhfPvcwj",
+        mediaType: "image/png",
+        files: [
+            {
+                name: "icon-1000",
+                mediaType: "image/webp",
+                src: "ipfs://QmUbvavFxGSSEo3ipQf7rjrELDvXHDshWkHZSpV8CVdSE5",
+            },
+        ],
+    };
+    const metadata = projectTemplate.toMetadata(scheme);
+    const sourceMap = await mkSourceMap(lifecycleNami, mkProject(scheme));
     const contractInstance = await sourceMap.createContract({
         stakeAddress: rewardAddress,
-        tags: fundMyProjectTag,
+        tags: projectTag,
         metadata,
+        roles: { payee: mintRole(scheme.payee, 1n, tokenMetadata) },
     });
     console.log(`Contract created with id ${contractInstance.id}`);
     // this is another option to wait for a tx when using the instance of the contract
@@ -175,7 +248,7 @@ async function loadContractMenu(lifecycleLace, lifecycleNami) {
     });
     const cid = contractId(cidStr);
     // Then we make sure that contract id is an instance of our fund my project contract
-    const validationResult = await fundMyProjectValidation(lifecycleLace, cid);
+    const validationResult = await projectValidation(lifecycleLace, cid);
     if (validationResult === "InvalidMarloweTemplate") {
         console.log("Invalid contract, it does not have the expected tags");
         return;
@@ -191,8 +264,7 @@ async function loadContractMenu(lifecycleLace, lifecycleNami) {
     console.log(`  * Amount: ${validationResult.scheme.amount} lovelaces`);
     console.log(`  * Deposit deadline: ${validationResult.scheme.depositDeadline}`);
     console.log(`  Project Name: ${validationResult.scheme.projectName}`);
-    console.log(`  Project Github: ${validationResult.scheme.githubUrl}`);
-    const contractInstance = await lifecycleLace.newContractAPI.load(cid);
+    const contractInstance = await lifecycleNami.newContractAPI.load(cid);
     return contractMenu(lifecycleNami.wallet, lifecycleLace.wallet, contractInstance, validationResult.scheme, validationResult.sourceMap);
 }
 /**
@@ -201,15 +273,15 @@ async function loadContractMenu(lifecycleLace, lifecycleNami) {
 async function contractMenu(walletNami, walletLace, contractInstance, scheme, sourceMap) {
     const inputHistory = await contractInstance.getInputHistory();
     // console.log({ inputHistory });
-    const contractState = fundMyProjectGetState(datetoTimeout(new Date()), inputHistory, sourceMap);
+    const contractState = projectGetState(datetoTimeout(new Date()), inputHistory, sourceMap);
     // console.log({ contractState });
     if (contractState.type === "Closed")
         return;
-    fundMyProjectStatePlus(contractState, scheme);
+    projectStatePlus(contractState, scheme);
     // See what actions are applicable to the current contract state
     const applicableActions = await contractInstance.evaluateApplicableActions();
     //   console.log({ applicableActions });
-    const choices = fundMyProjectGetActions(applicableActions, contractState);
+    const choices = projectGetActions(applicableActions, contractState);
     const selectedAction = await select({
         message: "Contract menu",
         choices,
@@ -231,4 +303,18 @@ async function contractMenu(walletNami, walletLace, contractInstance, scheme, so
             return contractMenu(walletNami, walletLace, contractInstance, scheme, sourceMap);
     }
 }
-//# sourceMappingURL=fund-my-project-flow.js.map
+export async function downloadPayouts(lifecycleLace) {
+    const available = await lifecycleLace.payouts.available();
+    const widthdrawn = await lifecycleLace.payouts.withdrawn();
+    console.log("available", available);
+    console.log("widthdrawn", widthdrawn);
+}
+export async function withDrawPayouts(lifecycleLace) {
+    const payoutIdentification = payoutId(await input({
+        message: "Enter the Payout Id",
+    }));
+    //There is no TxId in this version, but the function waits for the tx to be in the blockchain
+    const txId = await lifecycleLace.payouts.withdraw([payoutIdentification]);
+    console.log("txId", txId);
+}
+//# sourceMappingURL=giftCard-flow.js.map

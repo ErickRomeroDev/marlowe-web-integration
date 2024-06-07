@@ -4,7 +4,7 @@ import { lovelace, close } from "@marlowe.io/marlowe-object";
 import { datetoTimeout } from "@marlowe.io/language-core-v1";
 import { mkSourceMap } from "../utils/experimental-features/source-map.js";
 import * as ObjG from "@marlowe.io/marlowe-object/guards";
-import * as t from "io-ts/lib/index.js";
+import * as t from "io-ts";
 const DelayPaymentAnnotationsGuard = t.union([
     t.literal("initialDeposit"),
     t.literal("WaitForRelease"),
