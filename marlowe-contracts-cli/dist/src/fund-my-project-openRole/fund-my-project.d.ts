@@ -10,7 +10,7 @@ import * as t from "io-ts";
 import { RestClient } from "@marlowe.io/runtime-rest-client";
 export declare const fundMyProjectTag: Tags;
 export type FundMyProjectParameters = TemplateParametersOf<typeof fundMyProjectTemplate>;
-export type FundMyProjectAnnotations = "initialDeposit" | "PaymentMissedClose" | "PaymentReleasedClose";
+export type FundMyProjectAnnotations = "initialDeposit" | "WaitForRelease" | "PaymentMissedClose" | "PaymentReleasedClose";
 export type FundMyProjectValidationResults = "InvalidMarloweTemplate" | "InvalidContract" | {
     scheme: FundMyProjectParameters;
     sourceMap: SourceMap<FundMyProjectAnnotations>;
@@ -23,13 +23,21 @@ export type FundMyProjectMetadataResults = "InvalidMarloweTemplate" | {
     scheme: FundMyProjectParameters;
     stateMarlowe: MarloweState | undefined;
 };
-export type FundMyProjectState = InitialState | PaymentMissed | Closed;
+export type FundMyProjectState = InitialState | PaymentDeposited | PaymentMissed | PaymentReady | Closed;
 type InitialState = {
     type: "InitialState";
     txSuccess: TransactionSuccess;
 };
+type PaymentDeposited = {
+    type: "PaymentDeposited";
+    txSuccess: TransactionSuccess;
+};
 type PaymentMissed = {
     type: "PaymentMissed";
+    txSuccess: TransactionSuccess;
+};
+type PaymentReady = {
+    type: "PaymentReady";
     txSuccess: TransactionSuccess;
 };
 type Closed = {
@@ -51,6 +59,7 @@ export declare const fundMyProjectTemplate: import("@marlowe.io/marlowe-template
     payee: t.Branded<string, import("@marlowe.io/runtime-core").AddressBech32Brand>;
     amount: import("@marlowe.io/adapter/bigint").BigIntOrNumber;
     depositDeadline: Date;
+    releaseDeadline: Date;
     projectName: string;
     githubUrl: string;
 }>;

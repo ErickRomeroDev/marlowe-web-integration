@@ -5,7 +5,7 @@ import { ContractId } from "@marlowe.io/runtime-core";
 import { SourceMap } from "../utils/experimental-features/source-map.js";
 import { POSIXTime } from "@marlowe.io/adapter/time";
 import { SingleInputTx } from "@marlowe.io/language-core-v1/semantics";
-import * as t from "io-ts/lib/index.js";
+import * as t from "io-ts";
 export type DelayPaymentParameters = TemplateParametersOf<typeof delayPaymentTemplate>;
 export type DelayPaymentAnnotations = "initialDeposit" | "WaitForRelease" | "PaymentMissedClose" | "PaymentReleasedClose";
 export type DelayPaymentValidationResults = "InvalidMarloweTemplate" | "InvalidContract" | {

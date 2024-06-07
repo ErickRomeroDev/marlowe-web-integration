@@ -4,7 +4,7 @@ import { datetoTimeout } from "@marlowe.io/language-core-v1";
 import { mkSourceMap, mkSourceMapRest } from "../utils/experimental-features/source-map.js";
 import * as ObjG from "@marlowe.io/marlowe-object/guards";
 import * as t from "io-ts";
-export const fundMyProjectTag = { FUND_MY_PROJECT_VERSION_2: {}, "FILTER-VERSION_1": { contracts: "normal", vcs: "registered" } };
+export const fundMyProjectTag = { CONTRACT_VERSION_3: {} };
 const FundMyProjectAnnotationsGuard = t.union([
     t.literal("initialDeposit"),
     t.literal("PaymentMissedClose"),
@@ -57,7 +57,7 @@ export function mkFundMyProject(scheme) {
                     when: [
                         {
                             case: {
-                                party: { address: scheme.payer },
+                                party: { role_token: "payer" },
                                 deposits: BigInt(scheme.amount),
                                 of_token: lovelace,
                                 into_account: { address: scheme.payee },
@@ -131,7 +131,7 @@ export function fundMyProjectStatePlus(state, scheme) {
     switch (state.type) {
         case "InitialState":
             console.log(`Waiting ${scheme.payer} to deposit ${scheme.amount}`);
-            return { printResult: `Waiting ${scheme.payer} to deposit ${scheme.amount}` };
+            return { printResult: `Waiting for role "Payer" to deposit ${scheme.amount}` };
         case "PaymentMissed":
             console.log(`Payment missed on ${scheme.depositDeadline}, contract can be closed to retrieve minUTXO`);
             return { printResult: `Payment missed on ${scheme.depositDeadline}, contract can be closed to retrieve minUTXO` };

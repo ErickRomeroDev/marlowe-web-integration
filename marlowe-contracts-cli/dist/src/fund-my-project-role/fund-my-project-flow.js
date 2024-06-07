@@ -8,6 +8,7 @@ import { bech32Validator, dateInFutureValidator, positiveBigIntValidator, waitIn
 import { mkSourceMap } from "../utils/experimental-features/source-map.js";
 import { datetoTimeout } from "@marlowe.io/language-core-v1";
 import { fundMyProjectGetActions, fundMyProjectGetState, fundMyProjectStatePlus, fundMyProjectTag, fundMyProjectTemplate, fundMyProjectValidation, mkFundMyProject, } from "./fund-my-project.js";
+import { mintRole } from "@marlowe.io/runtime-rest-client/contract";
 // When this script is called, start with main.
 main();
 async function main() {
@@ -59,7 +60,7 @@ async function mainLoop(lifecycleNami, lifecycleLace, rewardAddress) {
                     await loadContractMenu(lifecycleLace, lifecycleNami);
                     break;
                 case "download":
-                    await downloadMenu(lifecycleNami);
+                    await downloadMenu(lifecycleLace);
                     break;
                 case "exit":
                     process.exit(0);
@@ -80,21 +81,43 @@ async function mainLoop(lifecycleNami, lifecycleLace, rewardAddress) {
     }
 }
 export async function downloadMenu(lifecycleNami) {
-    const tags_array = ["FUND_MY_PROJECT_VERSION_1", "FILTER-VERSION_1"];
-    const [walletAddress] = await lifecycleNami.wallet.getUsedAddresses();
+    const tags_array = ["CONTRACT_VERSION_2"];
+    //Address option
+    // const [walletAddress] = await lifecycleNami.wallet.getUsedAddresses();
+    // const contractsRequest: GetContractsRequest = {
+    //   tags: tags_array,
+    //   partyAddresses: [walletAddress] as AddressBech32[],    
+    // };
+    // const contractHeaders = await lifecycleNami.restClient.getContracts(contractsRequest);
+    // const contractHeaderFilteredByWallet = contractHeaders.contracts
+    //Filter token option
     const contractsRequest = {
         tags: tags_array,
-        partyAddresses: [walletAddress],
     };
     const contractHeaders = await lifecycleNami.restClient.getContracts(contractsRequest);
-    console.log(contractHeaders.page);
-    await Promise.all(contractHeaders.contracts.map(async (item) => {
+    const walletTokens = await lifecycleNami.wallet.getTokens();
+    const tokenAssetName = "payer";
+    //filter those contracts that have Policy ID, if they dont have one they have ""
+    const filteredByRoleTokenMintingPolicy = contractHeaders.contracts.filter((header) => header.roleTokenMintingPolicyId);
+    console.log("filteredByRoleTokenMintingPolicy", filteredByRoleTokenMintingPolicy);
+    //predicate
+    const filteredByWalletTokens = (header) => {
+        return walletTokens.some((item) => item.assetId.policyId === header.roleTokenMintingPolicyId && item.assetId.assetName === tokenAssetName);
+    };
+    //filter by tokens on the wallet
+    const contractHeaderFilteredByWallet = filteredByRoleTokenMintingPolicy.filter((header) => filteredByWalletTokens(header));
+    console.log("contractHeaderFilteredByWallet", contractHeaderFilteredByWallet);
+    await Promise.all(contractHeaderFilteredByWallet.map(async (item) => {
         try {
             const result = await fundMyProjectValidation(lifecycleNami, item.contractId);
             if (result === "InvalidMarloweTemplate" || result === "InvalidContract") {
-                throw new Error("invalid");
+                // throw new Error("invalid");
+                console.log("invalid");
+                return;
             }
             const contractInstance = await lifecycleNami.newContractAPI.load(item.contractId);
+            const details = await contractInstance.getDetails();
+            console.log("details", details);
             const inputHistory = await contractInstance.getInputHistory();
             const contractState = fundMyProjectGetState(datetoTimeout(new Date()), inputHistory, result.sourceMap);
             console.log("contractState", contractState);
@@ -149,12 +172,26 @@ export async function createContractMenu(lifecycleNami, lifecycleLace, rewardAdd
         projectName,
         githubUrl,
     };
+    const tokenMetadata = {
+        name: "VC Token",
+        description: "These tokens give access to deposit on the contract",
+        image: "ipfs://QmaQMH7ybS9KmdYQpa4FMtAhwJH5cNaacpg4fTwhfPvcwj",
+        mediaType: "image/png",
+        files: [
+            {
+                name: "icon-1000",
+                mediaType: "image/webp",
+                src: "ipfs://QmUbvavFxGSSEo3ipQf7rjrELDvXHDshWkHZSpV8CVdSE5",
+            },
+        ],
+    };
     const metadata = fundMyProjectTemplate.toMetadata(scheme);
     const sourceMap = await mkSourceMap(lifecycleNami, mkFundMyProject(scheme));
     const contractInstance = await sourceMap.createContract({
         stakeAddress: rewardAddress,
         tags: fundMyProjectTag,
         metadata,
+        roles: { payer: mintRole(scheme.payer, 1n, tokenMetadata) },
     });
     console.log(`Contract created with id ${contractInstance.id}`);
     // this is another option to wait for a tx when using the instance of the contract

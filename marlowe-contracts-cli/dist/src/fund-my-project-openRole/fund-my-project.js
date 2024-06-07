@@ -4,9 +4,10 @@ import { datetoTimeout } from "@marlowe.io/language-core-v1";
 import { mkSourceMap, mkSourceMapRest } from "../utils/experimental-features/source-map.js";
 import * as ObjG from "@marlowe.io/marlowe-object/guards";
 import * as t from "io-ts";
-export const fundMyProjectTag = { FUND_MY_PROJECT_VERSION_2: {}, "FILTER-VERSION_1": { contracts: "normal", vcs: "registered" } };
+export const fundMyProjectTag = { CONTRACT_VERSION_3: {} };
 const FundMyProjectAnnotationsGuard = t.union([
     t.literal("initialDeposit"),
+    t.literal("WaitForRelease"),
     t.literal("PaymentMissedClose"),
     t.literal("PaymentReleasedClose"),
 ]);
@@ -35,6 +36,11 @@ export const fundMyProjectTemplate = mkMarloweTemplate({
             type: "date",
         },
         {
+            name: "releaseDeadline",
+            description: "A date after the payment can be released to the receiver. NOTE: An empty transaction must be done to close the contract",
+            type: "date",
+        },
+        {
             name: "projectName",
             description: "The name of the project",
             type: "string",
@@ -50,6 +56,15 @@ export function mkFundMyProject(scheme) {
     return {
         main: "initial-deposit",
         objects: {
+            "release-funds": {
+                type: "contract",
+                value: {
+                    annotation: "WaitForRelease",
+                    when: [],
+                    timeout: datetoTimeout(scheme.releaseDeadline),
+                    timeout_continuation: close("PaymentReleasedClose"),
+                },
+            },
             "initial-deposit": {
                 type: "contract",
                 value: {
@@ -57,12 +72,14 @@ export function mkFundMyProject(scheme) {
                     when: [
                         {
                             case: {
-                                party: { address: scheme.payer },
+                                party: { role_token: "payer" },
                                 deposits: BigInt(scheme.amount),
                                 of_token: lovelace,
                                 into_account: { address: scheme.payee },
                             },
-                            then: close("PaymentReleasedClose"),
+                            then: {
+                                ref: "release-funds",
+                            },
                         },
                     ],
                     timeout: datetoTimeout(scheme.depositDeadline),
@@ -120,6 +137,13 @@ export function fundMyProjectGetState(currenTime, history, sourceMap) {
             else {
                 return { type: "InitialState", txSuccess: txOut };
             }
+        case "WaitForRelease":
+            if (currenTime > txOut.contract.timeout) {
+                return { type: "PaymentReady", txSuccess: txOut };
+            }
+            else {
+                return { type: "PaymentDeposited", txSuccess: txOut };
+            }
         case "PaymentMissedClose":
             return { type: "Closed", result: "Missed deposit", txSuccess: txOut };
         case "PaymentReleasedClose":
@@ -131,10 +155,16 @@ export function fundMyProjectStatePlus(state, scheme) {
     switch (state.type) {
         case "InitialState":
             console.log(`Waiting ${scheme.payer} to deposit ${scheme.amount}`);
-            return { printResult: `Waiting ${scheme.payer} to deposit ${scheme.amount}` };
+            return { printResult: `Waiting for role "Payer" to deposit ${scheme.amount}` };
+        case "PaymentDeposited":
+            console.log(`Payment deposited, waiting until ${scheme.releaseDeadline} to be able to release the payment`);
+            return { printResult: `Payment deposited, waiting until ${scheme.releaseDeadline} to be able to release the payment` };
         case "PaymentMissed":
             console.log(`Payment missed on ${scheme.depositDeadline}, contract can be closed to retrieve minUTXO`);
             return { printResult: `Payment missed on ${scheme.depositDeadline}, contract can be closed to retrieve minUTXO` };
+        case "PaymentReady":
+            console.log(`Payment ready to be released`);
+            return { printResult: `Payment ready to be released` };
         case "Closed":
             console.log(`Contract closed: ${state.result}`);
             return { printResult: `Contract closed: ${state.result}` };
@@ -147,12 +177,14 @@ export function fundMyProjectGetActions(applicableAction, contractState) {
             name: "Re-check contract state",
             value: { type: "check-state" },
         },
-        ...applicableAction.myActions.map((action) => {
+        ...applicableAction.actions.map((action) => {
             switch (action.type) {
                 case "Advance":
                     return {
                         name: "Close contract",
-                        description: "Receive minUTXO",
+                        description: contractState.type == "PaymentMissed"
+                            ? "The payer will receive minUTXO"
+                            : "The payer will receive minUTXO and the payee will receive the payment",
                         value: action,
                     };
                 case "Deposit":
