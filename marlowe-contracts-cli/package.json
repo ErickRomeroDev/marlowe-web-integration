@@ -10,6 +10,7 @@
     "fund-my-project-role": "npx tsc && node dist/src/fund-my-project-role/fund-my-project-flow.js",
     "giftCard": "npx tsc && node dist/src/gift-card/giftCard-flow.js",
     "vesting": "npx tsc && node dist/src/vesting/vesting-flow.js",
+    "escrow": "npx tsc && node dist/src/escrow/escrow-flow.js",
     "test": "jest",
     "test:deposit-contract": "jest src/contract-depositv2/deposit-contract.test.ts"
   },
