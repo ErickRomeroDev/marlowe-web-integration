@@ -58,6 +58,7 @@ async function annotatedClosure<T>(
   console.log("intermediateIds",intermediateIds)
 
   const closure = await getContractClosure({ restClient })(contractSourceId);  
+  console.log("closure",closure)
 
   // The intermediateIds is an object whose keys belong to the source code and value is the merkle hash.
   // We need to reverse this object in order to annotate the closure using the source annotations.

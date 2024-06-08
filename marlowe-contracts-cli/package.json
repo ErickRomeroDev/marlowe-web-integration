@@ -11,6 +11,7 @@
     "giftCard": "npx tsc && node dist/src/gift-card/giftCard-flow.js",
     "vesting": "npx tsc && node dist/src/vesting/vesting-flow.js",
     "escrow": "npx tsc && node dist/src/escrow/escrow-flow.js",
+    "splitter": "npx tsc && node dist/src/payment-splitter-escrow/paymentSplitter-flow.js",
     "test": "jest",
     "test:deposit-contract": "jest src/contract-depositv2/deposit-contract.test.ts"
   },
