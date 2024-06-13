@@ -1,33 +1,28 @@
 import { Blockfrost, Lucid } from "lucid-cardano";
 import { readConfig } from "../../config.js";
 import {
-  AddressBech32,
+  ContractId,
   StakeAddressBech32,
   addressBech32,
-  contractId,
-  contractIdToTxId,
+  contractId,  
   payoutId,
   stakeAddressBech32,
 } from "@marlowe.io/runtime-core";
-import { WalletAPI, mkLucidWallet } from "@marlowe.io/wallet";
+import {  mkLucidWallet } from "@marlowe.io/wallet";
 import { mkRuntimeLifecycle } from "@marlowe.io/runtime-lifecycle";
-import { CanAdvance, CanDeposit, ContractInstanceAPI, RuntimeLifecycle } from "@marlowe.io/runtime-lifecycle/api";
+import {  RuntimeLifecycle } from "@marlowe.io/runtime-lifecycle/api";
 import { input, select } from "@inquirer/prompts";
 import { bech32Validator, dateInFutureValidator, positiveBigIntValidator, waitIndicator } from "../utils/utils.js";
-import { SourceMap, mkSourceMap } from "../utils/experimental-features/source-map.js";
-import { datetoTimeout } from "@marlowe.io/language-core-v1";
-import {
-  ProjectAnnotations,
-  ProjectParameters,
-  projectGetActions,
-  projectGetState,
-  projectStatePlus,
-  projectTag,
-  projectTemplate,
-  projectValidation,
-  mkProject,
+
+import {  
+  ProjectParameters,  
+  mkContract,
+  getContractInfoPlus,  
+  applyInputDeposit,
+  existContractId,
+  getContractsByAddress,
+  getContractsByToken,
 } from "./giftCard.js";
-import { ContractHeader, GetContractsRequest, mintRole } from "@marlowe.io/runtime-rest-client/contract";
 
 // When this script is called, start with main.
 main();
@@ -70,11 +65,19 @@ async function mainLoop(lifecycleNami: RuntimeLifecycle, lifecycleLace: RuntimeL
         message: "Main menu",
         choices: [
           { name: "Create a contract", value: "create" },
-          { name: "Load a contract", value: "load" },
-          { name: "See contracts filterd by Address", value: "downloadByAddress" },
-          { name: "See contracts filtered by Token", value: "downloadByToken" },
-          { name: "Download Payouts", value: "downloadPayouts" },
-          { name: "withDrawPayouts", value: "withDrawPayouts" },
+          { name: "Load a contract Nami", value: "loadNami" },
+          { name: "Load a contract Lace", value: "loadLace" },
+          // { name: "Load a contract Nami Open Role", value: "loadNamiOpen" },
+          // { name: "Load a contract Lace Open Role", value: "loadLaceOpen" },
+          // { name: "See Open Role Contracts", value: "downloadByOpenRole" },
+          { name: "See contracts filterd by Address Nami", value: "downloadByAddressNami" },
+          { name: "See contracts filtered by Token Nami", value: "downloadByTokenNami" },
+          { name: "See contracts filterd by Address Lace", value: "downloadByAddressLace" },
+          { name: "See contracts filtered by Token Lace", value: "downloadByTokenLace" },
+          { name: "Download Payouts Nami", value: "downloadPayoutsNami" },
+          { name: "withDrawPayouts Nami", value: "withDrawPayoutsNami" },
+          { name: "Download Payouts Lace", value: "downloadPayoutsLace" },
+          { name: "withDrawPayouts Lace", value: "withDrawPayoutsLace" },
           { name: "Exit", value: "exit" },
         ],
       });
@@ -82,20 +85,44 @@ async function mainLoop(lifecycleNami: RuntimeLifecycle, lifecycleLace: RuntimeL
         case "create":
           await createContractMenu(lifecycleNami, lifecycleLace, rewardAddress);
           break;
-        case "load":
-          await loadContractMenu(lifecycleLace, lifecycleNami);
+        case "loadNami":
+          await loadNami(lifecycleNami, lifecycleLace);
           break;
-        case "downloadByToken":
-          await downloadMenuByToken(lifecycleLace);
+        case "loadLace":
+          await loadLace(lifecycleNami, lifecycleLace);
           break;
-        case "downloadByAddress":
-          await downloadMenuByAddress(lifecycleNami);
+        // case "loadNamiOpen":
+        //   await loadNamiOpen(lifecycleNami, lifecycleLace);
+        //   break;
+        // case "loadLaceOpen":
+        //   await loadLaceOpen(lifecycleNami, lifecycleLace);
+        //   break;
+        // case "downloadByOpenRole":
+        //   await downloadByOpenRole(lifecycleNami);
+        //   break;
+        case "downloadByAddressNami":
+          await downloadByAddressNami(lifecycleNami);
           break;
-        case "downloadPayouts":
-          await downloadPayouts(lifecycleLace);
+        case "downloadByTokenNami":
+          await downloadByTokenNami(lifecycleNami);
           break;
-        case "withDrawPayouts":
-          await withDrawPayouts(lifecycleLace);
+        case "downloadByAddressLace":
+          await downloadByAddressLace(lifecycleLace);
+          break;
+        case "downloadByTokenLace":
+          await downloadByTokenLace(lifecycleLace);
+          break;
+        case "downloadPayoutsNami":
+          await downloadPayoutsNami(lifecycleNami);
+          break;
+        case "withDrawPayoutsNami":
+          await withDrawPayoutsNami(lifecycleNami);
+          break;
+          case "downloadPayoutsLace":
+          await downloadPayoutsLace(lifecycleLace);
+          break;
+        case "withDrawPayoutsLace":
+          await withDrawPayoutsLace(lifecycleLace);
           break;
         case "exit":
           process.exit(0);
@@ -114,105 +141,6 @@ async function mainLoop(lifecycleNami: RuntimeLifecycle, lifecycleLace: RuntimeL
   }
 }
 
-export async function downloadMenuByToken(lifecycleNami: RuntimeLifecycle) {
-  const tags_array = ["GIFTCARD"];
-
-  //Filter token option
-  const contractsRequest: GetContractsRequest = {
-    tags: tags_array,
-  };
-  const contractHeaders = await lifecycleNami.restClient.getContracts(contractsRequest);
-  const walletTokens = await lifecycleNami.wallet.getTokens();
-  const tokenAssetName = "payee" as string;
-
-  //filter those contracts that have Policy ID, if they dont have one they have ""
-  const filteredByRoleTokenMintingPolicy = contractHeaders.contracts.filter((header) => header.roleTokenMintingPolicyId);
-
-  //predicate
-  const filteredByWalletTokens = (header: ContractHeader): boolean => {
-    return walletTokens.some(
-      (item) => item.assetId.policyId === header.roleTokenMintingPolicyId && item.assetId.assetName === tokenAssetName
-    );
-  };
-
-  //filter by tokens on the wallet
-  const contractHeaderFilteredByWallet = filteredByRoleTokenMintingPolicy.filter((header) => filteredByWalletTokens(header));
-  console.log("contractHeaderFilteredByToken", contractHeaderFilteredByWallet);
-
-  await Promise.all(
-    contractHeaderFilteredByWallet.map(async (item) => {
-      try {
-        const result = await projectValidation(lifecycleNami, item.contractId);
-        if (result === "InvalidMarloweTemplate" || result === "InvalidContract") {
-          // throw new Error("invalid");
-          console.log("invalid");
-          return;
-        }
-        const contractInstance = await lifecycleNami.newContractAPI.load(item.contractId);
-        const details = await contractInstance.getDetails();
-        console.log("details", details);
-        const inputHistory = await contractInstance.getInputHistory();
-        const contractState = projectGetState(datetoTimeout(new Date()), inputHistory, result.sourceMap);
-        console.log("contractState", contractState);
-        if (contractState.type !== "Closed") {
-          projectStatePlus(contractState, result.scheme);
-          const applicableActions = await contractInstance.evaluateApplicableActions();
-          const choices = projectGetActions(applicableActions, contractState);
-          console.log("choices", choices);
-        }
-      } catch (error) {
-        console.log("error", error);
-      }
-    })
-  );
-}
-
-export async function downloadMenuByAddress(lifecycleNami: RuntimeLifecycle) {
-  const tags_array = ["GIFTCARD"];
-
-  //Address option
-  const [walletAddress] = await lifecycleNami.wallet.getUsedAddresses();
-  const contractsRequest: GetContractsRequest = {
-    tags: tags_array,
-    partyAddresses: [walletAddress] as AddressBech32[],
-  };
-  const contractHeaders = await lifecycleNami.restClient.getContracts(contractsRequest);
-  const contractHeaderFilteredByWallet = contractHeaders.contracts;
-  console.log("header", contractHeaderFilteredByWallet);
-
-  await Promise.all(
-    contractHeaderFilteredByWallet.map(async (item) => {
-      try {
-        const result = await projectValidation(lifecycleNami, item.contractId);
-        if (result === "InvalidMarloweTemplate" || result === "InvalidContract") {
-          // throw new Error("invalid");
-          console.log("invalid");
-          return;
-        }
-        const contractInstance = await lifecycleNami.newContractAPI.load(item.contractId);
-        const details = await contractInstance.getDetails();
-        console.log("details", details);
-        const inputHistory = await contractInstance.getInputHistory();
-        const contractState = projectGetState(datetoTimeout(new Date()), inputHistory, result.sourceMap);
-        console.log("contractState", contractState);
-        if (contractState.type !== "Closed") {
-          projectStatePlus(contractState, result.scheme);
-          const applicableActions = await contractInstance.evaluateApplicableActions();
-          const choices = projectGetActions(applicableActions, contractState);
-          console.log("choices", choices);
-        }
-      } catch (error) {
-        console.log("error", error);
-      }
-    })
-  );
-}
-
-/**
- * This is an Inquirer.js flow to create a contract
- * @param lifecycle An instance of the RuntimeLifecycle
- * @param rewardAddress An optional reward address to stake the contract rewards
- */
 export async function createContractMenu(
   lifecycleNami: RuntimeLifecycle,
   lifecycleLace: RuntimeLifecycle,
@@ -237,7 +165,7 @@ export async function createContractMenu(
   });
   const depositDeadline = new Date(depositDeadlineStr);
 
-  const projectName = await input({
+  const beneficiaryName = await input({
     message: "Enter the Beneficiary name",
   });
 
@@ -252,122 +180,154 @@ export async function createContractMenu(
     payee,
     amount,
     depositDeadline,
-    projectName,
-  };
-  const tokenMetadata = {
-    name: `${projectName}-GIFT-CARD`,
-    description: "Gift Card present",
-    image: "ipfs://QmaQMH7ybS9KmdYQpa4FMtAhwJH5cNaacpg4fTwhfPvcwj",
-    mediaType: "image/png",
-    files: [
-      {
-        name: "icon-1000",
-        mediaType: "image/webp",
-        src: "ipfs://QmUbvavFxGSSEo3ipQf7rjrELDvXHDshWkHZSpV8CVdSE5",
-      },
-    ],
-  };
-  const metadata = projectTemplate.toMetadata(scheme);
-  const sourceMap = await mkSourceMap(lifecycleNami, mkProject(scheme));
-  const contractInstance = await sourceMap.createContract({
-    stakeAddress: rewardAddress,
-    tags: projectTag,
-    metadata,
-    roles: { payee: mintRole(scheme.payee, 1n, tokenMetadata) },
-  });
+    beneficiaryName,
+  }; 
+  const contractInstance = await mkContract(scheme, lifecycleNami, rewardAddress);
 
   console.log(`Contract created with id ${contractInstance.id}`);
 
-  // this is another option to wait for a tx when using the instance of the contract
-  // await contractInstance.waitForConfirmation();
-  await waitIndicator(lifecycleNami.wallet, contractIdToTxId(contractInstance.id));
+  await contractInstance.waitForConfirmation();  
 
   console.log(`Contract id ${contractInstance.id} was successfully submited to the blockchain`);
 
-  return contractMenu(lifecycleNami.wallet, lifecycleLace.wallet, contractInstance, scheme, sourceMap);
+  return contractMenuAddressRolesNami(lifecycleNami, lifecycleLace, contractInstance.id);
 }
 
-/**
- * This is an Inquirer.js flow to load an existing contract
- * @param lifecycle
- * @returns
- */
-async function loadContractMenu(lifecycleLace: RuntimeLifecycle, lifecycleNami: RuntimeLifecycle) {
+async function loadNami(lifecycleNami: RuntimeLifecycle, lifecycleLace: RuntimeLifecycle) {
   // First we ask the user for a contract id
   const cidStr = await input({
     message: "Enter the contractId",
   });
   const cid = contractId(cidStr);
-  // Then we make sure that contract id is an instance of our fund my project contract
-  const validationResult = await projectValidation(lifecycleLace, cid);
-  if (validationResult === "InvalidMarloweTemplate") {
-    console.log("Invalid contract, it does not have the expected tags");
-    return;
-  }
-  if (validationResult === "InvalidContract") {
-    console.log("Invalid contract, it does not have the expected contract source");
+ 
+  try {
+    await existContractId(cid, lifecycleNami);
+  } catch (error) {
+    console.log("contract Invalid");
     return;
   }
 
-  // If it is, we print the contract details and go to the contract menu
-  console.log("Contract details:");
-  console.log(`  * Pay from: ${validationResult.scheme.payer}`);
-  console.log(`  * Pay to: ${validationResult.scheme.payee}`);
-  console.log(`  * Amount: ${validationResult.scheme.amount} lovelaces`);
-  console.log(`  * Deposit deadline: ${validationResult.scheme.depositDeadline}`);
-  console.log(`  Project Name: ${validationResult.scheme.projectName}`);
-  const contractInstance = await lifecycleNami.newContractAPI.load(cid);
-  return contractMenu(lifecycleNami.wallet, lifecycleLace.wallet, contractInstance, validationResult.scheme, validationResult.sourceMap);
+  return contractMenuAddressRolesNami(lifecycleNami, lifecycleLace, cid);
 }
 
-/**
- * This is an Inquirer.js flow to interact with a contract
- */
-async function contractMenu(
-  walletNami: WalletAPI,
-  walletLace: WalletAPI,
-  contractInstance: ContractInstanceAPI,
-  scheme: ProjectParameters,
-  sourceMap: SourceMap<ProjectAnnotations>
-): Promise<void> {
-  const inputHistory = await contractInstance.getInputHistory();
-  // console.log({ inputHistory });
+async function contractMenuAddressRolesNami(
+  lifecycleNami: RuntimeLifecycle,
+  lifecycleLace: RuntimeLifecycle,
+  contractId: ContractId    
+): Promise<void> {  
+  const contractInfoPlus = await getContractInfoPlus(contractId, lifecycleNami);
+  const actions = contractInfoPlus!.myChoices;
+  
+  console.log("state",contractInfoPlus!.statePlus)  
 
-  const contractState = projectGetState(datetoTimeout(new Date()), inputHistory, sourceMap);
-  // console.log({ contractState });
-
-  if (contractState.type === "Closed") return;
-
-  projectStatePlus(contractState, scheme);
-  // See what actions are applicable to the current contract state
-  const applicableActions = await contractInstance.evaluateApplicableActions();
-  //   console.log({ applicableActions });
-
-  const choices = projectGetActions(applicableActions, contractState);
-
-  const selectedAction = await select({
-    message: "Contract menu",
-    choices,
+  const selectedAction = await select({  
+    message: "Contract menu",  
+    choices: actions,
   });
-  switch (selectedAction.type) {
-    case "check-state":
-      return contractMenu(walletNami, walletLace, contractInstance, scheme, sourceMap);
-    case "return":
-      return;
+  switch (selectedAction.type) {   
     case "Advance":
     case "Deposit":
-      console.log("Applying input");
-      const applicableInput = await applicableActions.toInput(selectedAction);
-      const txId = await applicableActions.apply({
-        input: applicableInput,
-      });
+      const txId = await applyInputDeposit(contractInfoPlus, selectedAction);      
       console.log(`Input applied with txId ${txId}`);
-      await waitIndicator(walletLace, txId);
-      return contractMenu(walletNami, walletLace, contractInstance, scheme, sourceMap);
+      await waitIndicator(lifecycleNami.wallet, txId);
+      return contractMenuAddressRolesNami(lifecycleNami, lifecycleLace, contractId);
   }
 }
 
-export async function downloadPayouts(lifecycleLace: RuntimeLifecycle) {
+async function loadLace(lifecycleNami: RuntimeLifecycle, lifecycleLace: RuntimeLifecycle) {
+  // First we ask the user for a contract id
+  const cidStr = await input({
+    message: "Enter the contractId",
+  });
+  const cid = contractId(cidStr);
+ 
+  try {
+    await existContractId(cid, lifecycleLace);
+  } catch (error) {
+    console.log("contract Invalid");
+    return;
+  }
+
+  return contractMenuAddressRolesLace(lifecycleNami, lifecycleLace, cid);
+}
+
+async function contractMenuAddressRolesLace(
+  lifecycleNami: RuntimeLifecycle,
+  lifecycleLace: RuntimeLifecycle,
+  contractId: ContractId    
+): Promise<void> {  
+  const contractInfoPlus = await getContractInfoPlus(contractId, lifecycleLace);
+  const actions = contractInfoPlus!.myChoices;
+  
+  console.log("state",contractInfoPlus!.statePlus)  
+
+  const selectedAction = await select({  
+    message: "Contract menu",  
+    choices: actions,
+  });
+  switch (selectedAction.type) {   
+    case "Advance":
+    case "Deposit":
+      const txId = await applyInputDeposit(contractInfoPlus, selectedAction);      
+      console.log(`Input applied with txId ${txId}`);
+      await waitIndicator(lifecycleLace.wallet, txId);
+      return contractMenuAddressRolesLace(lifecycleNami, lifecycleLace, contractId);
+  }
+}
+
+export async function downloadByAddressNami(lifecycleNami: RuntimeLifecycle) {  
+  const InfoBasic = await getContractsByAddress(lifecycleNami);
+  const rangeNext = InfoBasic.page.next;
+  const InfoBasicNext = await getContractsByAddress(lifecycleNami, rangeNext);
+  console.log("InfoBasic",InfoBasic);
+  console.log("InfoBasicNext",InfoBasicNext);
+}
+
+export async function downloadByTokenNami(lifecycleNami: RuntimeLifecycle) {
+  const InfoBasic = await getContractsByToken("payee", lifecycleNami);
+  const rangeNext = InfoBasic.page.next;
+  const InfoBasicNext = await getContractsByToken("payee", lifecycleNami, rangeNext);
+  console.log("InfoBasic",InfoBasic);
+  console.log("InfoBasicNext",InfoBasicNext);  
+}
+
+export async function downloadByAddressLace(lifecycleLace: RuntimeLifecycle) {  
+  const InfoBasic = await getContractsByAddress(lifecycleLace);
+  const rangeNext = InfoBasic.page.next;
+  const InfoBasicNext = await getContractsByAddress(lifecycleLace, rangeNext);
+  console.log("InfoBasic",InfoBasic);
+  console.log("InfoBasicNext",InfoBasicNext);
+}
+
+export async function downloadByTokenLace(lifecycleLace: RuntimeLifecycle) {
+  const InfoBasic = await getContractsByToken("payee", lifecycleLace);
+  const rangeNext = InfoBasic.page.next;
+  const InfoBasicNext = await getContractsByToken("payee", lifecycleLace, rangeNext);
+  console.log("InfoBasic",InfoBasic);
+  console.log("InfoBasicNext",InfoBasicNext);  
+}
+
+export async function downloadPayoutsNami(lifecycleNami: RuntimeLifecycle) {
+  const available = await lifecycleNami.payouts.available();
+  const widthdrawn = await lifecycleNami.payouts.withdrawn();
+
+  console.log("available", available);
+  console.log("widthdrawn", widthdrawn);
+}
+
+export async function withDrawPayoutsNami(lifecycleNami: RuntimeLifecycle) {
+  const payoutIdentification = payoutId(
+    await input({
+      message: "Enter the Payout Id",
+    })
+  );
+
+  //There is no TxId in this version, but the function waits for the tx to be in the blockchain
+  const txId = await lifecycleNami.payouts.withdraw([payoutIdentification]);
+  console.log("txId",txId);
+}
+
+export async function downloadPayoutsLace(lifecycleLace: RuntimeLifecycle) {
   const available = await lifecycleLace.payouts.available();
   const widthdrawn = await lifecycleLace.payouts.withdrawn();
 
@@ -375,7 +335,7 @@ export async function downloadPayouts(lifecycleLace: RuntimeLifecycle) {
   console.log("widthdrawn", widthdrawn);
 }
 
-export async function withDrawPayouts(lifecycleLace: RuntimeLifecycle) {
+export async function withDrawPayoutsLace(lifecycleLace: RuntimeLifecycle) {
   const payoutIdentification = payoutId(
     await input({
       message: "Enter the Payout Id",

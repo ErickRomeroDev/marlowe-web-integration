@@ -125,11 +125,6 @@ async function mainLoop(lifecycleNami, lifecycleLace, rewardAddress) {
         }
     }
 }
-/**
- * This is an Inquirer.js flow to create a contract
- * @param lifecycle An instance of the RuntimeLifecycle
- * @param rewardAddress An optional reward address to stake the contract rewards
- */
 export async function createContractMenu(lifecycleNami, lifecycleLace, rewardAddress) {
     const auditor = addressBech32(await input({
         message: "Enter the auditor address",
