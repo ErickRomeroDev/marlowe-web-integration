@@ -55,13 +55,13 @@ export type ProjectActions = Array<{
     };
 }>;
 export declare const projectTemplate: import("@marlowe.io/marlowe-template").MarloweTemplate<{
-    auditor: t.Branded<string, import("@marlowe.io/runtime-core").AddressBech32Brand>;
     payee: t.Branded<string, import("@marlowe.io/runtime-core").AddressBech32Brand>;
     amount: import("@marlowe.io/adapter/bigint").BigIntOrNumber;
     depositDeadline: Date;
     releaseDeadline: Date;
     projectName: string;
     githubUrl: string;
+    auditor: t.Branded<string, import("@marlowe.io/runtime-core").AddressBech32Brand>;
 }>;
 export declare function mkProject(scheme: ProjectParameters): ContractBundleMap<ProjectAnnotations>;
 export declare function projectMetadata(restClient: RestClient, contractId: ContractId): Promise<ProjectMetadataResults>;

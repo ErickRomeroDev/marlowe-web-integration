@@ -149,11 +149,6 @@ async function mainLoop(lifecycleNami: RuntimeLifecycle, lifecycleLace: RuntimeL
   }
 }
 
-/**
- * This is an Inquirer.js flow to create a contract
- * @param lifecycle An instance of the RuntimeLifecycle
- * @param rewardAddress An optional reward address to stake the contract rewards
- */
 export async function createContractMenu(
   lifecycleNami: RuntimeLifecycle,
   lifecycleLace: RuntimeLifecycle,

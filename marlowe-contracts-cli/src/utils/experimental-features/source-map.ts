@@ -204,7 +204,7 @@ export async function mkSourceMap<T>(
   };
 }
 
-//use this when wallet address (no create contract feature)
+// use this when wallet address (no create contract feature)
 export interface SourceMapRest<T> {
   source: ContractBundleMap<T>;
   closure: ContractClosure;
