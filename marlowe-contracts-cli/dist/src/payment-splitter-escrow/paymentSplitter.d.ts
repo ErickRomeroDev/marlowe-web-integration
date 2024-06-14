@@ -59,9 +59,9 @@ export declare const projectTemplate: import("@marlowe.io/marlowe-template").Mar
     amount: import("@marlowe.io/adapter/bigint").BigIntOrNumber;
     depositDeadline: Date;
     releaseDeadline: Date;
+    auditor: t.Branded<string, import("@marlowe.io/runtime-core").AddressBech32Brand>;
     projectName: string;
     githubUrl: string;
-    auditor: t.Branded<string, import("@marlowe.io/runtime-core").AddressBech32Brand>;
 }>;
 export declare function mkProject(scheme: ProjectParameters): ContractBundleMap<ProjectAnnotations>;
 export declare function projectMetadata(restClient: RestClient, contractId: ContractId): Promise<ProjectMetadataResults>;

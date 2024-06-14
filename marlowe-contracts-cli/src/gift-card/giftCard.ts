@@ -263,25 +263,25 @@ export async function mkContract(
   return contractInstance;
 }
 
-export async function getContractsByAddress(
+export async function getContractsByAddress(  
   runtimeLifecycle: RuntimeLifecycle,
   range?: ItemRange,  
 ): Promise<{
   contractInfoBasic: ContractInfoBasic[];
   page: Page;
-}> {
-  const [walletAddress] = await runtimeLifecycle.wallet.getUsedAddresses();
+}> {  
+  const walletAddress = await runtimeLifecycle.wallet.getUsedAddresses();
   let contractsRequest: GetContractsRequest;
   if (range) {
     contractsRequest = {
       tags: tags_array,
-      partyAddresses: [walletAddress],
+      partyAddresses: walletAddress,
       range: range,
     };
   } else {
     contractsRequest = {
       tags: tags_array,
-      partyAddresses: [walletAddress],
+      partyAddresses: walletAddress,
     };
   }
 
@@ -383,11 +383,10 @@ export async function getContractInfoPlus(id: string, runtimeLifecycle: RuntimeL
     statePlus,
     myChoices,
   };
-
   return contractInfo;
 }
 
-//getCOntractInfloPlusOpenRole  - change  the myChoices with choices using the projectGetActions function
+//getContractInfloPlusOpenRole  - change  the myChoices with choices using the projectGetActions function
 
 export async function applyInputDeposit(contractInfo: ContractInfoPlus, value: CanDeposit | CanAdvance): Promise<TxId> {
   const applicableActions = await contractInfo?.contractInstance.evaluateApplicableActions();
@@ -399,6 +398,8 @@ export async function applyInputDeposit(contractInfo: ContractInfoPlus, value: C
 }
 
 //apply for choices
+
+//apply for notify
 
 export async function existContractId(contractId: string, runtimeLifecycle: RuntimeLifecycle) {
   await runtimeLifecycle.restClient.getContractById({
