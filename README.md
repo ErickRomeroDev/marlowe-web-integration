@@ -56,7 +56,7 @@ Procedure for designing, creating, testing and integrating Marlowe smart contrac
 - **Web Integration:** After testing the contract using CLI commands, the web integration process begins. This involves connecting the contract logic with a web framework, ensuring proper integration, incorporating a wallet plugin, and focusing on UI and UX design. Additionally, it includes testing to confirm that the contract executes as expected within the web environment.
 
 Next, we include a list of contracts included in this repository that have been tested using some of the features and procedures mentioned earlier.
-Live DAPP is available at this link: https://marlowe-web-integration.vercel.app/
+Live DAPP is available at this link: https://example-dapp-seven.vercel.app/
 
 ### Deposit Contract
 
@@ -316,6 +316,117 @@ function mkBundle(scheme: ProjectParameters): ContractBundleMap<ProjectAnnotatio
                 into_account: { role_token: "payee" },
               },
               then: close("PaymentReleasedClose"),
+            },
+          ],
+          timeout: datetoTimeout(scheme.depositDeadline),
+          timeout_continuation: close("PaymentMissedClose"),
+        },
+      },
+    },
+  };
+}
+```
+
+### VESTING
+
+`Description:`
+
+- A project owner can create a contract containing project-related information and a intention for a venture capitalist (VC) to invest. The contract includes addresses, open roles, amounts, and holding times within its datum. The project owner's name and GitHub URL are sent through the transaction metadata.
+- Any user can become a venture capitalist since this role is being managed as Open Role, meaning, the VC participant is not known during the contract creation. All parties interested in being a VC will be able to view all contracts requesting support and see all related details, including the parameters set during contract creation (addresses, amounts, and time). They can also determine the contract's state and what actions can be taken. 
+- A specific contract lookup (Open Role contracts) feature was included for VCs searching for a particular project owner's contract by its ID.  
+- The contract features a deferred payment option for venture capitalists who are willing to pay the project owner after a specified period, reflecting the progress made on the project.
+- Purpose: We continue testing and improving the initialization of a framework to create on-chain and off-chain Contract APIs, allowing Dapp developers to focus on their applications without worrying about contract logic. Some experimental features included using Marlowe parameters and treating the contract as a bundled object.
+
+`Features included:`
+
+- Contract as bundle objects: Annotations (experimental feature only available using TS-SDK)
+- Template (experimental feature)
+- Party as Addresses
+- Party as Open Roles
+- Search by Addresses
+- Search by Open Roles 
+- Available and withdrawn Payouts
+- Wallets supported (Nami, Eternl and Lace)
+
+`Procedure:`
+
+- **Design:** (https://github.com/ErickRomeroDev/marlowe-web-integration/blob/main/marlowe-contracts-cli/src/vesting/vesting.jpg)
+- **Create:** This contract was created using the new framework and best practices, consisting of both on-chain and off-chain APIs. Dapp developers only need to focus on business logic, as all contract execution logic is handled by the contract API. The framework includes declaring contracts as objects and using the experimental feature called annotations (SourceMap). The `code` can be found here: https://github.com/ErickRomeroDev/marlowe-web-integration/blob/main/marlowe-contracts-cli/src/vesting/vesting.ts
+- **Testing:** This contract was tested by simulating all possible contract paths using CLI commands. `Code` can be found here: https://github.com/ErickRomeroDev/marlowe-web-integration/blob/main/marlowe-contracts-cli/src/vesting/vesting-flow.ts
+- **Web Integration:** We tested the integration of specific libraries into web frameworks, such as Marlowe objects and templates. Future contracts will build on this contract and its features. `Code` can be found here: https://github.com/ErickRomeroDev/marlowe-web-integration/tree/main/app/(dashboard)/(marlowe-contracts)/vesting
+
+```typescript
+const projectTemplate = mkMarloweTemplate({
+  name: "Fund my project",
+  description: "Fund projects that are making the Cardano Community grow!!!",
+  params: [
+    {
+      name: "payer",
+      description: "Who is making the payment",
+      type: "address",
+    },
+    {
+      name: "payee",
+      description: "Who is receiving the payment",
+      type: "address",
+    },
+    {
+      name: "amount",
+      description: "The amount of lovelaces to be paid",
+      type: "value",
+    },
+    {
+      name: "depositDeadline",
+      description: "The deadline for the payment to be made. If the payment is not made by this date, the contract can be closed",
+      type: "date",
+    },
+    {
+      name: "releaseDeadline",
+      description:
+        "A date after the payment can be released to the receiver. NOTE: An empty transaction must be done to close the contract",
+      type: "date",
+    },
+    {
+      name: "projectName",
+      description: "The name of the project",
+      type: "string",
+    },
+    {
+      name: "githubUrl",
+      description: "The link of the project GITHUB repository",
+      type: "string",
+    },
+  ] as const,
+});
+
+function mkBundle(scheme: ProjectParameters): ContractBundleMap<ProjectAnnotations> {
+  return {
+    main: "initial-deposit",
+    objects: {
+      "release-funds": {
+        type: "contract",
+        value: {
+          annotation: "WaitForRelease",
+          when: [],
+          timeout: datetoTimeout(scheme.releaseDeadline),
+          timeout_continuation: close("PaymentReleasedClose"),
+        },
+      },
+      "initial-deposit": {
+        type: "contract",
+        value: {
+          annotation: "initialDeposit",
+          when: [
+            {
+              case: {
+                party: { role_token: "payer" },
+                deposits: BigInt(scheme.amount),
+                of_token: lovelace,
+                into_account: { address: scheme.payee },
+              },
+              then: {
+                ref: "release-funds",
+              },
             },
           ],
           timeout: datetoTimeout(scheme.depositDeadline),
