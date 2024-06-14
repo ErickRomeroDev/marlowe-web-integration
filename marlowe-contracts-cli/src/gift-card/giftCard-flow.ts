@@ -275,7 +275,7 @@ async function contractMenuAddressRolesLace(
   }
 }
 
-export async function downloadByAddressNami(lifecycleNami: RuntimeLifecycle) {  
+export async function downloadByAddressNami(lifecycleNami: RuntimeLifecycle) {   
   const InfoBasic = await getContractsByAddress(lifecycleNami);
   const rangeNext = InfoBasic.page.next;
   const InfoBasicNext = await getContractsByAddress(lifecycleNami, rangeNext);

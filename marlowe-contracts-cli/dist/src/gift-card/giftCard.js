@@ -179,19 +179,19 @@ export async function mkContract(schema, runtimeLifecycle, rewardAddress) {
     return contractInstance;
 }
 export async function getContractsByAddress(runtimeLifecycle, range) {
-    const [walletAddress] = await runtimeLifecycle.wallet.getUsedAddresses();
+    const walletAddress = await runtimeLifecycle.wallet.getUsedAddresses();
     let contractsRequest;
     if (range) {
         contractsRequest = {
             tags: tags_array,
-            partyAddresses: [walletAddress],
+            partyAddresses: walletAddress,
             range: range,
         };
     }
     else {
         contractsRequest = {
             tags: tags_array,
-            partyAddresses: [walletAddress],
+            partyAddresses: walletAddress,
         };
     }
     const contractHeaders = await runtimeLifecycle.restClient.getContracts(contractsRequest);
@@ -268,7 +268,7 @@ export async function getContractInfoPlus(id, runtimeLifecycle) {
     };
     return contractInfo;
 }
-//getCOntractInfloPlusOpenRole  - change  the myChoices with choices using the projectGetActions function
+//getContractInfloPlusOpenRole  - change  the myChoices with choices using the projectGetActions function
 export async function applyInputDeposit(contractInfo, value) {
     const applicableActions = await contractInfo?.contractInstance.evaluateApplicableActions();
     const applicableInput = await applicableActions.toInput(value);
@@ -278,6 +278,7 @@ export async function applyInputDeposit(contractInfo, value) {
     return txId;
 }
 //apply for choices
+//apply for notify
 export async function existContractId(contractId, runtimeLifecycle) {
     await runtimeLifecycle.restClient.getContractById({
         contractId: contractId,
