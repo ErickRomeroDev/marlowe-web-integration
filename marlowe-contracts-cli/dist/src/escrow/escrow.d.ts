@@ -1,29 +1,26 @@
 import { TemplateParametersOf } from "@marlowe.io/marlowe-template";
-import { ContractBundleMap } from "@marlowe.io/marlowe-object";
-import { MarloweState } from "@marlowe.io/language-core-v1";
-import { CanAdvance, CanChoose, CanDeposit, NewApplicableActionsAPI, RuntimeLifecycle } from "@marlowe.io/runtime-lifecycle/api";
-import { ContractId, Tags } from "@marlowe.io/runtime-core";
-import { SourceMap, SourceMapRest } from "../utils/experimental-features/source-map.js";
-import { POSIXTime } from "@marlowe.io/adapter/time";
-import { SingleInputTx, TransactionSuccess } from "@marlowe.io/language-core-v1/semantics";
+import { CanAdvance, CanChoose, CanDeposit, ContractInstanceAPI, RuntimeLifecycle } from "@marlowe.io/runtime-lifecycle/api";
+import { StakeAddressBech32, TxId } from "@marlowe.io/runtime-core";
+import { TransactionSuccess } from "@marlowe.io/language-core-v1/semantics";
 import * as t from "io-ts";
-import { RestClient } from "@marlowe.io/runtime-rest-client";
-export declare const projectTag: Tags;
+import { ItemRange, Page } from "@marlowe.io/runtime-rest-client";
+import { ContractDetails, ContractHeader } from "@marlowe.io/runtime-rest-client/contract";
 export type ProjectParameters = TemplateParametersOf<typeof projectTemplate>;
-export type ProjectAnnotations = "initialDeposit" | "WaitForRelease" | "PaymentMissedClose" | "PaymentReleasedClose" | "PaymentCancelClose";
-export type ProjectValidationResults = "InvalidMarloweTemplate" | "InvalidContract" | {
+export type ContractInfoPlus = {
     scheme: ProjectParameters;
-    sourceMap: SourceMap<ProjectAnnotations>;
-};
-export type ProjectValidationResultsRest = "InvalidMarloweTemplate" | "InvalidContract" | {
+    contractDetails: ContractDetails;
+    contractInstance: ContractInstanceAPI;
+    state: ProjectState;
+    statePlus: any;
+    myChoices: ProjectActions;
+} | null;
+export type ContractInfoBasic = {
+    header: ContractHeader;
     scheme: ProjectParameters;
-    sourceMap: SourceMapRest<ProjectAnnotations>;
-};
-export type ProjectMetadataResults = "InvalidMarloweTemplate" | {
-    scheme: ProjectParameters;
-    stateMarlowe: MarloweState | undefined;
-};
-export type ProjectState = InitialState | PaymentDeposited | PaymentMissed | PaymentReady | Closed;
+    contractDetails: ContractDetails;
+    contractInstance: ContractInstanceAPI;
+} | null;
+type ProjectState = InitialState | PaymentDeposited | PaymentMissed | PaymentReady | Closed;
 type InitialState = {
     type: "InitialState";
     txSuccess: TransactionSuccess;
@@ -45,33 +42,37 @@ type Closed = {
     result: "Missed deposit" | "Payment released" | "Payment canceled";
     txSuccess: TransactionSuccess;
 };
-export type ProjectActions = Array<{
+type ProjectActions = Array<{
     name: string;
     description?: string;
-    value: CanDeposit | CanAdvance | CanChoose | {
-        type: "check-state";
-    } | {
-        type: "return";
-    };
+    value: CanDeposit | CanAdvance | CanChoose;
 }>;
-export declare const projectTemplate: import("@marlowe.io/marlowe-template").MarloweTemplate<{
+declare const projectTemplate: import("@marlowe.io/marlowe-template").MarloweTemplate<{
     payee: t.Branded<string, import("@marlowe.io/runtime-core").AddressBech32Brand>;
     amount: import("@marlowe.io/adapter/bigint").BigIntOrNumber;
     depositDeadline: Date;
     releaseDeadline: Date;
-    auditor: t.Branded<string, import("@marlowe.io/runtime-core").AddressBech32Brand>;
     projectName: string;
     githubUrl: string;
+    auditor: t.Branded<string, import("@marlowe.io/runtime-core").AddressBech32Brand>;
 }>;
-export declare function mkProject(scheme: ProjectParameters): ContractBundleMap<ProjectAnnotations>;
-export declare function projectMetadata(restClient: RestClient, contractId: ContractId): Promise<ProjectMetadataResults>;
-export declare function projectValidation(lifecycle: RuntimeLifecycle, contractId: ContractId): Promise<ProjectValidationResults>;
-export declare function projectGetState(currenTime: POSIXTime, history: SingleInputTx[], sourceMap: SourceMap<ProjectAnnotations> | SourceMapRest<ProjectAnnotations>): ProjectState;
-export declare function projectStatePlus(state: ProjectState, scheme: ProjectParameters): {
-    printResult: string;
-};
-export declare function projectGetOpenRoleActions(applicableAction: NewApplicableActionsAPI, contractState: ProjectState): ProjectActions;
-export declare function projectGetMyActions(applicableAction: NewApplicableActionsAPI, contractState: ProjectState): ProjectActions;
-export declare function projectValidationRest(restClient: RestClient, contractId: ContractId): Promise<ProjectValidationResultsRest>;
+export declare function mkContract(schema: ProjectParameters, runtimeLifecycle: RuntimeLifecycle, rewardAddress?: StakeAddressBech32): Promise<ContractInstanceAPI>;
+export declare function getContractsByAddress(runtimeLifecycle: RuntimeLifecycle, range?: ItemRange): Promise<{
+    contractInfoBasic: ContractInfoBasic[];
+    page: Page;
+}>;
+export declare function getContractsByToken(tokenAssetName: string, runtimeLifecycle: RuntimeLifecycle, range?: ItemRange): Promise<{
+    contractInfoBasic: ContractInfoBasic[];
+    page: Page;
+}>;
+export declare function getContractsByOpenRole(runtimeLifecycle: RuntimeLifecycle, range?: ItemRange): Promise<{
+    contractInfoBasic: ContractInfoBasic[];
+    page: Page;
+}>;
+export declare function getContractInfoPlus(id: string, runtimeLifecycle: RuntimeLifecycle): Promise<ContractInfoPlus>;
+export declare function getContractInfloPlusOpenRole(id: string, runtimeLifecycle: RuntimeLifecycle): Promise<ContractInfoPlus>;
+export declare function applyInputDeposit(contractInfo: ContractInfoPlus, value: CanDeposit | CanAdvance): Promise<TxId>;
+export declare function applyInputChoice(contractInfo: ContractInfoPlus, value: CanChoose): Promise<TxId>;
+export declare function existContractId(contractId: string, runtimeLifecycle: RuntimeLifecycle): Promise<void>;
 export {};
 //# sourceMappingURL=escrow.d.ts.map

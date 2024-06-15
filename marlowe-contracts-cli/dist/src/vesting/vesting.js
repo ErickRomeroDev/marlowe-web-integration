@@ -120,7 +120,6 @@ async function projectValidationSource(lifecycle, contractId) {
     const contractInstance = await lifecycle.newContractAPI.load(contractId);
     return { scheme, contractDetails, contractInstance, sourceMap };
 }
-//use when both wallet API and address
 async function projectGetState(currenTime, contractInstance, sourceMap) {
     const inputHistory = await contractInstance.getInputHistory();
     const Annotated = ObjG.Annotated(ProjectAnnotationsGuard);
@@ -152,7 +151,7 @@ async function projectGetState(currenTime, contractInstance, sourceMap) {
             return { type: "Closed", result: "Payment released", txSuccess: txOut };
     }
 }
-export function projectGetStatePlus(state, scheme) {
+function projectGetStatePlus(state, scheme) {
     switch (state.type) {
         case "InitialState":
             console.log(`Waiting ${scheme.payer} to deposit ${scheme.amount}`);

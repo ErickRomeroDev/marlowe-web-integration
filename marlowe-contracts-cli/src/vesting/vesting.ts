@@ -200,7 +200,6 @@ async function projectValidationSource(lifecycle: RuntimeLifecycle, contractId: 
   return { scheme, contractDetails, contractInstance, sourceMap };
 }
 
-//use when both wallet API and address
 async function projectGetState(
   currenTime: POSIXTime,
   contractInstance: ContractInstanceAPI,
@@ -236,7 +235,7 @@ async function projectGetState(
   }
 }
 
-export function projectGetStatePlus(state: ProjectState, scheme: ProjectParameters) {
+function projectGetStatePlus(state: ProjectState, scheme: ProjectParameters) {
   switch (state.type) {
     case "InitialState":
       console.log(`Waiting ${scheme.payer} to deposit ${scheme.amount}`);

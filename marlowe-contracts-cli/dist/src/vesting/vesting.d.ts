@@ -57,9 +57,6 @@ declare const projectTemplate: import("@marlowe.io/marlowe-template").MarloweTem
     projectName: string;
     githubUrl: string;
 }>;
-export declare function projectGetStatePlus(state: ProjectState, scheme: ProjectParameters): {
-    printResult: string;
-};
 export declare function mkContract(schema: ProjectParameters, runtimeLifecycle: RuntimeLifecycle, rewardAddress?: StakeAddressBech32): Promise<ContractInstanceAPI>;
 export declare function getContractsByAddress(runtimeLifecycle: RuntimeLifecycle, range?: ItemRange): Promise<{
     contractInfoBasic: ContractInfoBasic[];
