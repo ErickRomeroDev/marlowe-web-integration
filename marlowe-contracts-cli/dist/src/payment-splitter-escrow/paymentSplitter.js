@@ -1,11 +1,12 @@
 import { mkMarloweTemplate } from "@marlowe.io/marlowe-template";
 import { lovelace, close } from "@marlowe.io/marlowe-object";
 import { datetoTimeout } from "@marlowe.io/language-core-v1";
-import { addressBech32 } from "@marlowe.io/runtime-core";
-import { mkSourceMap, mkSourceMapRest } from "../utils/experimental-features/source-map.js";
+import { mkSourceMap } from "../utils/experimental-features/source-map.js";
 import * as ObjG from "@marlowe.io/marlowe-object/guards";
 import * as t from "io-ts";
-export const projectTag = { MARLOWE_ESCROW1: {} };
+import { mintRole } from "@marlowe.io/runtime-rest-client/contract";
+const projectTag = { PAYMENT_SPLITTER: {} };
+const tags_array = ["PAYMENT_SPLITTER"];
 const ProjectAnnotationsGuard = t.union([
     t.literal("initialDeposit"),
     t.literal("WaitForRelease"),
@@ -13,7 +14,7 @@ const ProjectAnnotationsGuard = t.union([
     t.literal("PaymentReleasedClose"),
     t.literal("PaymentCancelClose"),
 ]);
-export const projectTemplate = mkMarloweTemplate({
+const projectTemplate = mkMarloweTemplate({
     name: "Fund my project",
     description: "Fund projects that are making the Cardano Community grow!!!",
     params: [
@@ -24,6 +25,36 @@ export const projectTemplate = mkMarloweTemplate({
         },
         {
             name: "payee",
+            description: "Who is receiving the payment",
+            type: "address",
+        },
+        {
+            name: "payee2",
+            description: "Who is receiving the payment",
+            type: "address",
+        },
+        {
+            name: "payee3",
+            description: "Who is receiving the payment",
+            type: "address",
+        },
+        {
+            name: "payee4",
+            description: "Who is receiving the payment",
+            type: "address",
+        },
+        {
+            name: "payee5",
+            description: "Who is receiving the payment",
+            type: "address",
+        },
+        {
+            name: "payee6",
+            description: "Who is receiving the payment",
+            type: "address",
+        },
+        {
+            name: "payee7",
             description: "Who is receiving the payment",
             type: "address",
         },
@@ -54,14 +85,14 @@ export const projectTemplate = mkMarloweTemplate({
         },
     ],
 });
-const address1 = addressBech32("addr_test1qzjx6xzkz3l58r6t24fjn3r0ygvn87d2fwdrdlfvpvfpjvjwladqsndw3y6r3t5ra7ecys6uplm0glyx24kvfm9t5x8s8xegh6");
-const address2 = addressBech32("addr_test1qz87c32zumms5lp64fgmsucaucq0muhuu9u4fjeaxzed486wladqsndw3y6r3t5ra7ecys6uplm0glyx24kvfm9t5x8shd2max");
-const address3 = addressBech32("addr_test1qzvanymmffg7h75erjm99d7t7pq9efzgmjw683ndmkzzxa6wladqsndw3y6r3t5ra7ecys6uplm0glyx24kvfm9t5x8ssmglnl");
-const address4 = addressBech32("addr_test1qz6cs6t683eg49f9d7d8hayq89k5rd4kuh5xdym3sgscqw6wladqsndw3y6r3t5ra7ecys6uplm0glyx24kvfm9t5x8s7ltg0z");
-const address5 = addressBech32("addr_test1qr36c9ccg8j6e4qda5tk0e97j6yxgh3txrufz79r8y4nutjwladqsndw3y6r3t5ra7ecys6uplm0glyx24kvfm9t5x8slvtwst");
-const address6 = addressBech32("addr_test1qzwkamtf40cxr9tth7fz087e8f8ynr5vr7why3nw8r0d4r2wladqsndw3y6r3t5ra7ecys6uplm0glyx24kvfm9t5x8svmp6cn");
-const address7 = addressBech32("addr_test1qp6ypxq3wsgy69cz0qkmcmdfrr330rv7hhcxl9pla2gj6c2wladqsndw3y6r3t5ra7ecys6uplm0glyx24kvfm9t5x8sqm8fh6");
-export function mkProject(scheme) {
+// const address1 = addressBech32("addr_test1qzjx6xzkz3l58r6t24fjn3r0ygvn87d2fwdrdlfvpvfpjvjwladqsndw3y6r3t5ra7ecys6uplm0glyx24kvfm9t5x8s8xegh6");
+// const address2 = addressBech32("addr_test1qz87c32zumms5lp64fgmsucaucq0muhuu9u4fjeaxzed486wladqsndw3y6r3t5ra7ecys6uplm0glyx24kvfm9t5x8shd2max");
+// const address3 = addressBech32("addr_test1qzvanymmffg7h75erjm99d7t7pq9efzgmjw683ndmkzzxa6wladqsndw3y6r3t5ra7ecys6uplm0glyx24kvfm9t5x8ssmglnl");
+// const address4 = addressBech32("addr_test1qz6cs6t683eg49f9d7d8hayq89k5rd4kuh5xdym3sgscqw6wladqsndw3y6r3t5ra7ecys6uplm0glyx24kvfm9t5x8s7ltg0z");
+// const address5 = addressBech32("addr_test1qr36c9ccg8j6e4qda5tk0e97j6yxgh3txrufz79r8y4nutjwladqsndw3y6r3t5ra7ecys6uplm0glyx24kvfm9t5x8slvtwst");
+// const address6 = addressBech32("addr_test1qzwkamtf40cxr9tth7fz087e8f8ynr5vr7why3nw8r0d4r2wladqsndw3y6r3t5ra7ecys6uplm0glyx24kvfm9t5x8svmp6cn");
+// const address7 = addressBech32("addr_test1qp6ypxq3wsgy69cz0qkmcmdfrr330rv7hhcxl9pla2gj6c2wladqsndw3y6r3t5ra7ecys6uplm0glyx24kvfm9t5x8sqm8fh6");
+function mkBundle(scheme) {
     return {
         main: "initial-deposit",
         objects: {
@@ -99,7 +130,7 @@ export function mkProject(scheme) {
                     timeout: datetoTimeout(scheme.releaseDeadline),
                     timeout_continuation: {
                         from_account: { address: scheme.payee },
-                        to: { party: { address: address1 } },
+                        to: { party: { address: scheme.payee } },
                         pay: {
                             divide: {
                                 amount_of_token: lovelace,
@@ -110,7 +141,7 @@ export function mkProject(scheme) {
                         token: lovelace,
                         then: {
                             from_account: { address: scheme.payee },
-                            to: { party: { address: address2 } },
+                            to: { party: { address: scheme.payee2 } },
                             pay: {
                                 divide: {
                                     amount_of_token: lovelace,
@@ -121,7 +152,7 @@ export function mkProject(scheme) {
                             token: lovelace,
                             then: {
                                 from_account: { address: scheme.payee },
-                                to: { party: { address: address3 } },
+                                to: { party: { address: scheme.payee3 } },
                                 pay: {
                                     divide: {
                                         amount_of_token: lovelace,
@@ -132,7 +163,7 @@ export function mkProject(scheme) {
                                 token: lovelace,
                                 then: {
                                     from_account: { address: scheme.payee },
-                                    to: { party: { address: address4 } },
+                                    to: { party: { address: scheme.payee4 } },
                                     pay: {
                                         divide: {
                                             amount_of_token: lovelace,
@@ -143,7 +174,7 @@ export function mkProject(scheme) {
                                     token: lovelace,
                                     then: {
                                         from_account: { address: scheme.payee },
-                                        to: { party: { address: address5 } },
+                                        to: { party: { address: scheme.payee5 } },
                                         pay: {
                                             divide: {
                                                 amount_of_token: lovelace,
@@ -154,7 +185,7 @@ export function mkProject(scheme) {
                                         token: lovelace,
                                         then: {
                                             from_account: { address: scheme.payee },
-                                            to: { party: { address: address6 } },
+                                            to: { party: { address: scheme.payee6 } },
                                             pay: {
                                                 divide: {
                                                     amount_of_token: lovelace,
@@ -165,7 +196,7 @@ export function mkProject(scheme) {
                                             token: lovelace,
                                             then: {
                                                 from_account: { address: scheme.payee },
-                                                to: { party: { address: address7 } },
+                                                to: { party: { address: scheme.payee7 } },
                                                 pay: {
                                                     divide: {
                                                         amount_of_token: lovelace,
@@ -208,21 +239,7 @@ export function mkProject(scheme) {
         },
     };
 }
-//use when both wallet API and address
-export async function projectMetadata(restClient, contractId) {
-    // First we try to fetch the contract details and the required tags
-    const contractDetails = await restClient.getContractById({
-        contractId,
-    });
-    const scheme = projectTemplate.fromMetadata(contractDetails.metadata);
-    if (!scheme) {
-        return "InvalidMarloweTemplate";
-    }
-    const stateMarlowe = contractDetails.state;
-    return { scheme, stateMarlowe };
-}
-//use when wallet API
-export async function projectValidation(lifecycle, contractId) {
+async function projectValidationMetadata(lifecycle, contractId) {
     // First we try to fetch the contract details and the required tags
     const contractDetails = await lifecycle.restClient.getContractById({
         contractId,
@@ -231,17 +248,30 @@ export async function projectValidation(lifecycle, contractId) {
     if (!scheme) {
         return "InvalidMarloweTemplate";
     }
-    const sourceMap = await mkSourceMap(lifecycle, mkProject(scheme));
+    const contractInstance = await lifecycle.newContractAPI.load(contractId);
+    return { scheme, contractDetails, contractInstance };
+}
+async function projectValidationSource(lifecycle, contractId) {
+    // First we try to fetch the contract details and the required tags
+    const contractDetails = await lifecycle.restClient.getContractById({
+        contractId,
+    });
+    const scheme = projectTemplate.fromMetadata(contractDetails.metadata);
+    if (!scheme) {
+        return "InvalidMarloweTemplate";
+    }
+    const sourceMap = await mkSourceMap(lifecycle, mkBundle(scheme));
     const isInstanceof = await sourceMap.contractInstanceOf(contractId);
     if (!isInstanceof) {
         return "InvalidContract";
     }
-    return { scheme, sourceMap };
+    const contractInstance = await lifecycle.newContractAPI.load(contractId);
+    return { scheme, contractDetails, contractInstance, sourceMap };
 }
-//use when both wallet API and address
-export function projectGetState(currenTime, history, sourceMap) {
+async function projectGetState(currenTime, contractInstance, sourceMap) {
+    const inputHistory = await contractInstance.getInputHistory();
     const Annotated = ObjG.Annotated(ProjectAnnotationsGuard);
-    const txOut = sourceMap.playHistory(history);
+    const txOut = sourceMap.playHistory(inputHistory);
     if ("transaction_error" in txOut) {
         throw new Error(`Error playing history: ${txOut.transaction_error}`);
     }
@@ -271,8 +301,7 @@ export function projectGetState(currenTime, history, sourceMap) {
             return { type: "Closed", result: "Payment canceled", txSuccess: txOut };
     }
 }
-//use when both wallet API and address
-export function projectStatePlus(state, scheme) {
+function projectGetStatePlus(state, scheme) {
     switch (state.type) {
         case "InitialState":
             console.log(`Waiting for Payer to deposit ${scheme.amount}`);
@@ -291,43 +320,15 @@ export function projectStatePlus(state, scheme) {
             return { printResult: `Contract closed: ${state.result}` };
     }
 }
-//use when wallet API only (no option for wallet address)
-export function projectGetOpenRoleActions(applicableAction, contractState) {
+async function projectGetMyActions(contractInstance, state) {
+    const applicableAction = await contractInstance.evaluateApplicableActions();
     return [
-        {
-            name: "Re-check contract state",
-            value: { type: "check-state" },
-        },
-        ...applicableAction.actions.map((action) => {
-            switch (action.type) {
-                case "Deposit":
-                    return {
-                        name: `Deposit ${action.deposit.deposits} lovelaces`,
-                        value: action,
-                    };
-                default:
-                    throw new Error("Unexpected action type");
-            }
-        }),
-        {
-            name: "Return to main menu",
-            value: { type: "return" },
-        },
-    ];
-}
-//use when wallet API only (no option for wallet address)
-export function projectGetMyActions(applicableAction, contractState) {
-    return [
-        {
-            name: "Re-check contract state",
-            value: { type: "check-state" },
-        },
         ...applicableAction.myActions.map((action) => {
             switch (action.type) {
                 case "Advance":
                     return {
                         name: "Close contract",
-                        description: contractState.type == "PaymentMissed"
+                        description: state.type == "PaymentMissed"
                             ? "The payer will receive minUTXO"
                             : "The payer will receive minUTXO and the payee will receive the payment",
                         value: action,
@@ -341,27 +342,243 @@ export function projectGetMyActions(applicableAction, contractState) {
                     throw new Error("Unexpected action type");
             }
         }),
-        {
-            name: "Return to main menu",
-            value: { type: "return" },
-        },
     ];
 }
-//use when wallet address (sourceMap with no create contract option)
-export async function projectValidationRest(restClient, contractId) {
-    // First we try to fetch the contract details and the required tags
-    const contractDetails = await restClient.getContractById({
-        contractId,
+//for contracts that will be filtered to be on Open Roles turn
+async function projectGetActions(contractInstance, state) {
+    const applicableAction = await contractInstance.evaluateApplicableActions();
+    return [
+        ...applicableAction.actions.map((action) => {
+            switch (action.type) {
+                case "Deposit":
+                    return {
+                        name: `Deposit ${action.deposit.deposits} lovelaces`,
+                        value: action,
+                    };
+                default:
+                    throw new Error("Unexpected action type");
+            }
+        }),
+    ];
+}
+export async function mkContract(schema, runtimeLifecycle, rewardAddress) {
+    const tokenVCMetadata = {
+        name: "VC Token",
+        description: "These tokens give access to deposit on the contract",
+        image: "ipfs://QmaQMH7ybS9KmdYQpa4FMtAhwJH5cNaacpg4fTwhfPvcwj",
+        mediaType: "image/png",
+        files: [
+            {
+                name: "VC Token",
+                mediaType: "image/webp",
+                src: "ipfs://QmUbvavFxGSSEo3ipQf7rjrELDvXHDshWkHZSpV8CVdSE5",
+            },
+        ],
+    };
+    const tokenAuditorMetadata = {
+        name: "Auditor Token",
+        description: "These tokens give access to cancel the contract",
+        image: "ipfs://QmaQMH7ybS9KmdYQpa4FMtAhwJH5cNaacpg4fTwhfPvcwj",
+        mediaType: "image/png",
+        files: [
+            {
+                name: "Auditor Token",
+                mediaType: "image/webp",
+                src: "ipfs://QmUbvavFxGSSEo3ipQf7rjrELDvXHDshWkHZSpV8CVdSE5",
+            },
+        ],
+    };
+    const metadata = projectTemplate.toMetadata(schema);
+    const sourceMap = await mkSourceMap(runtimeLifecycle, mkBundle(schema));
+    const contractInstance = await sourceMap.createContract({
+        stakeAddress: rewardAddress,
+        tags: projectTag,
+        metadata,
+        roles: {
+            payer: mintRole("OpenRole", 1n, tokenVCMetadata),
+            auditor: mintRole(schema.auditor, 1n, tokenAuditorMetadata),
+        },
     });
-    const scheme = projectTemplate.fromMetadata(contractDetails.metadata);
-    if (!scheme) {
-        return "InvalidMarloweTemplate";
+    return contractInstance;
+}
+export async function getContractsByAddress(runtimeLifecycle, range) {
+    const walletAddress = await runtimeLifecycle.wallet.getUsedAddresses();
+    let contractsRequest;
+    if (range) {
+        contractsRequest = {
+            tags: tags_array,
+            partyAddresses: walletAddress,
+            range: range,
+        };
     }
-    const sourceMap = await mkSourceMapRest(restClient, mkProject(scheme));
-    const isInstanceof = await sourceMap.contractInstanceOf(contractId);
-    if (!isInstanceof) {
-        return "InvalidContract";
+    else {
+        contractsRequest = {
+            tags: tags_array,
+            partyAddresses: walletAddress,
+        };
     }
-    return { scheme, sourceMap };
+    const contractHeaders = await runtimeLifecycle.restClient.getContracts(contractsRequest);
+    const page = contractHeaders.page;
+    const contractInfoBasic = await Promise.all(contractHeaders.contracts.map(async (item) => {
+        const result = await projectValidationMetadata(runtimeLifecycle, item.contractId);
+        if (result === "InvalidMarloweTemplate") {
+            return null;
+        }
+        return {
+            header: item,
+            scheme: result.scheme,
+            contractDetails: result.contractDetails,
+            contractInstance: result.contractInstance,
+        };
+    }));
+    return { contractInfoBasic, page };
+}
+export async function getContractsByToken(tokenAssetName, runtimeLifecycle, range) {
+    let contractsRequest;
+    if (range) {
+        contractsRequest = {
+            tags: tags_array,
+            range: range,
+        };
+    }
+    else {
+        contractsRequest = {
+            tags: tags_array,
+        };
+    }
+    const contractHeaders = await runtimeLifecycle.restClient.getContracts(contractsRequest);
+    const walletTokens = await runtimeLifecycle.wallet.getTokens();
+    const page = contractHeaders.page;
+    //filter those contracts that have Policy ID, if they dont have one they have ""
+    const filteredByRoleTokenMintingPolicy = contractHeaders.contracts.filter((header) => header.roleTokenMintingPolicyId);
+    //predicate
+    const filteredByWalletTokens = (header) => {
+        return walletTokens.some((item) => item.assetId.policyId === header.roleTokenMintingPolicyId && item.assetId.assetName === tokenAssetName);
+    };
+    //filter by tokens on the wallet
+    const contractHeaderFilteredByWallet = filteredByRoleTokenMintingPolicy.filter((header) => filteredByWalletTokens(header));
+    const contractInfoBasic = await Promise.all(contractHeaderFilteredByWallet.map(async (item) => {
+        const result = await projectValidationMetadata(runtimeLifecycle, item.contractId);
+        if (result === "InvalidMarloweTemplate") {
+            return null;
+        }
+        return {
+            header: item,
+            scheme: result.scheme,
+            contractDetails: result.contractDetails,
+            contractInstance: result.contractInstance,
+        };
+    }));
+    return { contractInfoBasic, page };
+}
+export async function getContractsByOpenRole(runtimeLifecycle, range) {
+    let contractsRequest;
+    if (range) {
+        contractsRequest = {
+            tags: tags_array,
+            range: range,
+        };
+    }
+    else {
+        contractsRequest = {
+            tags: tags_array,
+        };
+    }
+    const contractHeaders = await runtimeLifecycle.restClient.getContracts(contractsRequest);
+    const page = contractHeaders.page;
+    //filter those contracts that have Policy ID, if they dont have one they have ""
+    const filteredByRoleTokenMintingPolicy = contractHeaders.contracts.filter((header) => header.roleTokenMintingPolicyId);
+    //predicate
+    const filteredByOpenRole = async (header) => {
+        const contractInstance = await runtimeLifecycle.newContractAPI.load(header.contractId);
+        const details = await contractInstance.getDetails();
+        if (details.type === "closed") {
+            return false;
+        }
+        const history = await contractInstance.getInputHistory();
+        const applicableActions = await runtimeLifecycle.applicableActions.getApplicableActions(details);
+        const depositAvailable = applicableActions.some((item) => item.type === "Deposit");
+        if (history.length === 0 && depositAvailable) {
+            return true;
+        }
+        else {
+            return false;
+        }
+    };
+    //filter by Open Roles
+    const contractHeaderFilteredByWallet = filteredByRoleTokenMintingPolicy.filter((header) => filteredByOpenRole(header));
+    const contractInfoBasic = await Promise.all(contractHeaderFilteredByWallet.map(async (item) => {
+        const result = await projectValidationMetadata(runtimeLifecycle, item.contractId);
+        if (result === "InvalidMarloweTemplate") {
+            return null;
+        }
+        return {
+            header: item,
+            scheme: result.scheme,
+            contractDetails: result.contractDetails,
+            contractInstance: result.contractInstance,
+        };
+    }));
+    return { contractInfoBasic, page };
+}
+export async function getContractInfoPlus(id, runtimeLifecycle) {
+    const cid = id;
+    const result = await projectValidationSource(runtimeLifecycle, cid);
+    if (result === "InvalidMarloweTemplate" || result === "InvalidContract") {
+        return null;
+    }
+    const state = await projectGetState(datetoTimeout(new Date()), result.contractInstance, result.sourceMap);
+    const myChoices = await projectGetMyActions(result.contractInstance, state);
+    const statePlus = projectGetStatePlus(state, result.scheme);
+    const contractInfo = {
+        scheme: result.scheme,
+        contractDetails: result.contractDetails,
+        contractInstance: result.contractInstance,
+        state,
+        statePlus,
+        myChoices,
+    };
+    return contractInfo;
+}
+export async function getContractInfloPlusOpenRole(id, runtimeLifecycle) {
+    const cid = id;
+    const result = await projectValidationSource(runtimeLifecycle, cid);
+    if (result === "InvalidMarloweTemplate" || result === "InvalidContract") {
+        return null;
+    }
+    const state = await projectGetState(datetoTimeout(new Date()), result.contractInstance, result.sourceMap);
+    const choices = await projectGetActions(result.contractInstance, state);
+    const statePlus = projectGetStatePlus(state, result.scheme);
+    const contractInfo = {
+        scheme: result.scheme,
+        contractDetails: result.contractDetails,
+        contractInstance: result.contractInstance,
+        state,
+        statePlus,
+        myChoices: choices,
+    };
+    return contractInfo;
+}
+export async function applyInputDeposit(contractInfo, value) {
+    const applicableActions = await contractInfo?.contractInstance.evaluateApplicableActions();
+    const applicableInput = await applicableActions.toInput(value);
+    const txId = await applicableActions.apply({
+        input: applicableInput,
+    });
+    return txId;
+}
+export async function applyInputChoice(contractInfo, value) {
+    const applicableActions = await contractInfo?.contractInstance.evaluateApplicableActions();
+    const applicableInput = await applicableActions.toInput(value, 1n);
+    const txId = await applicableActions.apply({
+        input: applicableInput,
+    });
+    return txId;
+}
+//apply for notify
+export async function existContractId(contractId, runtimeLifecycle) {
+    await runtimeLifecycle.restClient.getContractById({
+        contractId: contractId,
+    });
 }
 //# sourceMappingURL=paymentSplitter.js.map

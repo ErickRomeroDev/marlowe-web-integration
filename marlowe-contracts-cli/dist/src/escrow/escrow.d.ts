@@ -42,19 +42,19 @@ type Closed = {
     result: "Missed deposit" | "Payment released" | "Payment canceled";
     txSuccess: TransactionSuccess;
 };
-type ProjectActions = Array<{
+export type ProjectActions = Array<{
     name: string;
     description?: string;
     value: CanDeposit | CanAdvance | CanChoose;
 }>;
 declare const projectTemplate: import("@marlowe.io/marlowe-template").MarloweTemplate<{
+    auditor: t.Branded<string, import("@marlowe.io/runtime-core").AddressBech32Brand>;
     payee: t.Branded<string, import("@marlowe.io/runtime-core").AddressBech32Brand>;
     amount: import("@marlowe.io/adapter/bigint").BigIntOrNumber;
     depositDeadline: Date;
     releaseDeadline: Date;
     projectName: string;
     githubUrl: string;
-    auditor: t.Branded<string, import("@marlowe.io/runtime-core").AddressBech32Brand>;
 }>;
 export declare function mkContract(schema: ProjectParameters, runtimeLifecycle: RuntimeLifecycle, rewardAddress?: StakeAddressBech32): Promise<ContractInstanceAPI>;
 export declare function getContractsByAddress(runtimeLifecycle: RuntimeLifecycle, range?: ItemRange): Promise<{

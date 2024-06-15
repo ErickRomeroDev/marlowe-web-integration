@@ -581,3 +581,262 @@ function mkBundle(scheme: ProjectParameters): ContractBundleMap<ProjectAnnotatio
 }
 ```
 
+### PAYMENT SPLITTER ESCROW
+
+`Description:`
+
+- A project owner can create a contract containing project-related information and a intention for a venture capitalist (VC) to invest. The contract includes addresses, open roles, oracles (custom roles), roles, merklelization, amounts, and holding times within its datum. The project owner's name and GitHub URL are sent through the transaction metadata.
+- Any user can become a venture capitalist since this role is being managed as Open Role, meaning, the VC participant is not known during the contract creation. All parties interested in being a VC will be able to view all contracts requesting support and see all related details, including the parameters set during contract creation (addresses, amounts, and time). They can also determine the contract's state and what actions can be taken. 
+- A specific contract lookup (Open Role contracts) feature was included for VCs searching for a particular project owner's contract by its ID.  
+- Once the VC deposit is performed in the contract, the auditor will be able to cancel the contract in case the project is not delivered within time. Thus, the VC deposit money will go back to the VC.
+- Project Owners (who create the contract) will choose the auditor of their preference which will be identified by roles.
+- The contract features a deferred payment option for venture capitalists who are willing to pay the project owner after a specified period, reflecting the progress made on the project.
+- Project Owners will be able to specify up to 6 additional accounts (Collaborators addreesses) to receive the VC payment.
+- Purpose: We continue testing and improving the initialization of a framework to create on-chain and off-chain Contract APIs, allowing Dapp developers to focus on their applications without worrying about contract logic. Some experimental features included using Marlowe parameters and treating the contract as a bundled object.
+
+`Features included:`
+
+- Contract as bundle objects: Annotations (experimental feature only available using TS-SDK)
+- Template (experimental feature)
+- Merklelization
+- Oracles (custome roles)
+- Choice actions
+- Multiple payments optimized using Merklelization (uo to 7 payments within the same tx)
+- Party as Addresses
+- Party as roles
+- Party as Open Roles
+- Search by Addresses
+- Search by Token Roles
+- Search by Open Roles 
+- Available and withdrawn Payouts
+- Wallets supported (Nami, Eternl and Lace)
+
+`Procedure:`
+
+- **Design:** https://github.com/ErickRomeroDev/marlowe-web-integration/blob/main/marlowe-contracts-cli/src/payment-splitter-escrow/payment%20splitter%20escrow.jpg
+- **Create:** This contract was created using the new framework and best practices, consisting of both on-chain and off-chain APIs. Dapp developers only need to focus on business logic, as all contract execution logic is handled by the contract API. The framework includes declaring contracts as objects and using the experimental feature called annotations (SourceMap). The `code` can be found here: https://github.com/ErickRomeroDev/marlowe-web-integration/blob/main/marlowe-contracts-cli/src/payment-splitter-escrow/paymentSplitter.ts
+- **Testing:** This contract was tested by simulating all possible contract paths using CLI commands. `Code` can be found here: https://github.com/ErickRomeroDev/marlowe-web-integration/blob/main/marlowe-contracts-cli/src/payment-splitter-escrow/paymentSplitter-flow.ts
+- **Web Integration:** We tested the integration of specific libraries into web frameworks, such as Marlowe objects and templates. Future contracts will build on this contract and its features. `Code` can be found here: https://github.com/ErickRomeroDev/marlowe-web-integration/tree/main/app/(dashboard)/(marlowe-contracts)/paymentSplitter
+
+```typescript
+const projectTemplate = mkMarloweTemplate({
+  name: "Fund my project",
+  description: "Fund projects that are making the Cardano Community grow!!!",
+  params: [
+    {
+      name: "auditor",
+      description: "Who is auditing the contract",
+      type: "address",
+    },
+    {
+      name: "payee",
+      description: "Who is receiving the payment",
+      type: "address",
+    },
+    {
+      name: "payee2",
+      description: "Who is receiving the payment",
+      type: "address",
+    },
+    {
+      name: "payee3",
+      description: "Who is receiving the payment",
+      type: "address",
+    },
+    {
+      name: "payee4",
+      description: "Who is receiving the payment",
+      type: "address",
+    },
+    {
+      name: "payee5",
+      description: "Who is receiving the payment",
+      type: "address",
+    },
+    {
+      name: "payee6",
+      description: "Who is receiving the payment",
+      type: "address",
+    },
+    {
+      name: "payee7",
+      description: "Who is receiving the payment",
+      type: "address",
+    },
+    {
+      name: "amount",
+      description: "The amount of lovelaces to be paid",
+      type: "value",
+    },
+    {
+      name: "depositDeadline",
+      description: "The deadline for the payment to be made. If the payment is not made by this date, the contract can be closed",
+      type: "date",
+    },
+    {
+      name: "releaseDeadline",
+      description:
+        "A date after the payment can be released to the receiver. NOTE: An empty transaction must be done to close the contract",
+      type: "date",
+    },
+    {
+      name: "projectName",
+      description: "The name of the project",
+      type: "string",
+    },
+    {
+      name: "githubUrl",
+      description: "The link of the project GITHUB repository",
+      type: "string",
+    },
+  ] as const,
+});
+
+function mkBundle(scheme: ProjectParameters): ContractBundleMap<ProjectAnnotations> {
+  return {
+    main: "initial-deposit",
+    objects: {
+      payment: {
+        type: "contract",
+        value: {
+          from_account: { address: scheme.payee },
+          to: { account: { role_token: "payer" } },
+          pay: {
+            amount_of_token: lovelace,
+            in_account: { address: scheme.payee },
+          },
+          token: lovelace,
+          then: close("PaymentCancelClose"),
+        },
+      },
+      "release-funds": {
+        type: "contract",
+        value: {
+          annotation: "WaitForRelease",
+          when: [
+            {
+              case: {
+                choose_between: [{ from: 1n, to: 1n }],
+                for_choice: {
+                  choice_name: "cancel",
+                  choice_owner: { role_token: "auditor" },
+                },
+              },
+              then: {
+                ref: "payment",
+              },
+            },
+          ],
+          timeout: datetoTimeout(scheme.releaseDeadline),
+          timeout_continuation: {
+            from_account: { address: scheme.payee },
+            to: { party: { address: scheme.payee } },
+            pay: {
+              divide: {
+                amount_of_token: lovelace,
+                in_account: { address: scheme.payee },
+              },
+              by: 7n,
+            },
+            token: lovelace,
+            then: {
+              from_account: { address: scheme.payee },
+              to: { party: { address: scheme.payee2 } },
+              pay: {
+                divide: {
+                  amount_of_token: lovelace,
+                  in_account: { address: scheme.payee },
+                },
+                by: 6n,
+              },
+              token: lovelace,
+              then: {
+                from_account: { address: scheme.payee },
+                to: { party: { address: scheme.payee3 } },
+                pay: {
+                  divide: {
+                    amount_of_token: lovelace,
+                    in_account: { address: scheme.payee },
+                  },
+                  by: 5n,
+                },
+                token: lovelace,
+                then: {
+                  from_account: { address: scheme.payee },
+                  to: { party: { address: scheme.payee4 } },
+                  pay: {
+                    divide: {
+                      amount_of_token: lovelace,
+                      in_account: { address: scheme.payee },
+                    },
+                    by: 4n,
+                  },
+                  token: lovelace,
+                  then: {
+                    from_account: { address: scheme.payee },
+                    to: { party: { address: scheme.payee5 } },
+                    pay: {
+                      divide: {
+                        amount_of_token: lovelace,
+                        in_account: { address: scheme.payee },
+                      },
+                      by: 3n,
+                    },
+                    token: lovelace,
+                    then: {
+                      from_account: { address: scheme.payee },
+                      to: { party: { address: scheme.payee6 } },
+                      pay: {
+                        divide: {
+                          amount_of_token: lovelace,
+                          in_account: { address: scheme.payee },
+                        },
+                        by: 2n,
+                      },
+                      token: lovelace,
+                      then: {
+                        from_account: { address: scheme.payee },
+                        to: { party: { address: scheme.payee7 } },
+                        pay: {
+                          divide: {
+                            amount_of_token: lovelace,
+                            in_account: { address: scheme.payee },
+                          },
+                          by: 1n,
+                        },
+                        token: lovelace,
+                        then: close("PaymentReleasedClose"),
+                      },
+                    }
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+      "initial-deposit": {
+        type: "contract",
+        value: {
+          annotation: "initialDeposit",
+          when: [
+            {
+              case: {
+                party: { role_token: "payer" },
+                deposits: BigInt(scheme.amount),
+                of_token: lovelace,
+                into_account: { address: scheme.payee },
+              },
+              then: {
+                ref: "release-funds",
+              },
+            },
+          ],
+          timeout: datetoTimeout(scheme.depositDeadline),
+          timeout_continuation: close("PaymentMissedClose"),
+        },
+      },
+    },
+  };
+}
+```

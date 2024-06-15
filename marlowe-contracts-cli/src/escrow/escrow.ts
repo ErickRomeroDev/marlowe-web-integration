@@ -84,7 +84,7 @@ const ProjectAnnotationsGuard = t.union([
   t.literal("PaymentCancelClose"),
 ]);
 
-type ProjectActions = Array<{
+export type ProjectActions = Array<{
   name: string;
   description?: string;
   value: CanDeposit | CanAdvance | CanChoose ;
