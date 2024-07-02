@@ -264,7 +264,7 @@ export function mkFundMyProject(scheme: FundMyProjectParameters): ContractBundle
 - **Design:** (https://github.com/ErickRomeroDev/marlowe-web-integration/blob/main/marlowe-contracts-cli/src/gift-card/giftCard.jpg)
 - **Create:** This contract was created using the new framework and best practices, consisting of both on-chain and off-chain APIs. Dapp developers only need to focus on business logic, as all contract execution logic is handled by the contract API. The framework includes declaring contracts as objects and using the experimental feature called annotations (SourceMap). The `code` can be found here: https://github.com/ErickRomeroDev/marlowe-web-integration/blob/main/marlowe-contracts-cli/src/gift-card/giftCard.ts
 - **Testing:** This contract was tested by simulating all possible contract paths using CLI commands. `Code` can be found here: https://github.com/ErickRomeroDev/marlowe-web-integration/blob/main/marlowe-contracts-cli/src/gift-card/giftCard-flow.ts
-- **Web Integration:** We tested the integration of specific libraries into web frameworks, such as Marlowe objects and templates. Future contracts will build on this contract and its features. `Code` can be found here: https://github.com/ErickRomeroDev/marlowe-web-integration/tree/main/app/(dashboard)/(marlowe-contracts)/giftCard
+- **Web Integration:** We tested the integration of specific libraries into web frameworks, such as Marlowe objects and templates. Future contracts will build on this contract and its features. `Code` can be found here: https://github.com/ErickRomeroDev/marlowe-web-integration/tree/main/app/(dashboard)/(marlowe-contracts)/gift-card
 
 ```typescript
 const projectTemplate = mkMarloweTemplate({
