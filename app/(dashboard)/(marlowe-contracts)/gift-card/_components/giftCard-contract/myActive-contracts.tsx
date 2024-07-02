@@ -52,7 +52,7 @@ export const MyActiveContracts = () => {
   const [activeDialogIndex, setActiveDialogIndex] = useState<number | null>(null);
   const [loading, setLoading] = useState(false);
   const [loadingInfo, setLoadingInfo] = useState(false);
-  const tags_array = ["GIFT_CARD"];
+  const tags_array = ["GIFTCARD"];
 
   // get contract Info
   useEffect(() => {
@@ -183,7 +183,7 @@ export const MyActiveContracts = () => {
           <div className="grid grid-cols-[1.5fr,1.5fr,1fr,1fr,1fr,0.3fr] mt-7 mb-2 text-[14px] text-[#808191] pr-[14px]">
             <div className="">Contract ID</div>
             <div className=" pl-3">Project name</div>
-            <div className="text-center">Project Link</div>
+            <div className="text-center">NA</div>
             <div className="text-center">Amount</div>
             <div className="text-center">Deadline</div>
             <div></div>
