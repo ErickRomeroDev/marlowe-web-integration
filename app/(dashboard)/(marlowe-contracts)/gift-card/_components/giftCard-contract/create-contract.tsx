@@ -38,8 +38,7 @@ export const CreateContract = () => {
     }
   };
 
-  const formSchema = z.object({
-    name: z.string().min(5, { message: "Must be 5 or more characters long" }).max(20, { message: "Must be 20 characters or fewer" }),
+  const formSchema = z.object({    
     amount: z
       .string()
       // .transform((value) => Number(value))
@@ -60,14 +59,14 @@ export const CreateContract = () => {
     defaultValues: {
       beneficiary: "",
       address: "",
-      amount: "",
-      name: "",
+      amount: "",      
       date: minDate,
     },
   });
 
-  const onSubmit = async (values: z.infer<typeof formSchema>) => {
+  const onSubmit2 = async (values: z.infer<typeof formSchema>) => {
     const amount = Number(values.amount);
+    console.log("test")
     deploy(amount, values.address, values.date);
     console.log({ values });
   };
@@ -88,8 +87,9 @@ export const CreateContract = () => {
           payee: walletAddress as AddressBech32,
           payer: VC as AddressBech32,
           depositDeadline: new Date(depositDeadline),
-          beneficiaryName: walletAddress as AddressBech32,
+          beneficiaryName: "beneficiary",
         };
+        console.log("before creation")
         const contractInstance = await mkContract(schema, runtimeLifecycle)
 
         console.log(`Contract created with id ${contractInstance.id}`);
@@ -116,7 +116,7 @@ export const CreateContract = () => {
         You can invite supporters to contribute a specified amount to your project—just like backing your vision!
       </div>
       <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+        <form onSubmit={form.handleSubmit(onSubmit2)} className="space-y-4">
           <FormField
             control={form.control}
             name="address"
@@ -209,7 +209,7 @@ export const CreateContract = () => {
               <Button
                 className="w-[350px] gap-x-3 rounded-3xl font-normal text-[15px] bg-[#9D78FF] hover:bg-[#9D78FF]/80 "
                 disabled={loading}
-                type="submit"
+                type="submit"                
               >
                 <span>Processing</span>
                 <Image className="animate-spin" src="/loader-circle.svg" alt="loading" height={20} width={20} />
@@ -218,7 +218,7 @@ export const CreateContract = () => {
               <Button
                 className="w-[350px] rounded-3xl font-normal text-[15px] bg-[#9D78FF] hover:bg-[#9D78FF]/80 "
                 disabled={loading}
-                type="submit"
+                type="submit"                
               >
                 Deploy Smart Contract
               </Button>
