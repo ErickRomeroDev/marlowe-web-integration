@@ -28,6 +28,18 @@ export const Sidebar = () => {
       href: "/fund-project",
       currentUrl: pathname,
     },
+    {
+      label: "GiftCard",
+      imageSrc: ["/fund-me-white.svg", "/fund-me.svg"],
+      href: "/gift-card",
+      currentUrl: pathname,
+    },
+    {
+      label: "Vesting",
+      imageSrc: ["/fund-me-white.svg", "/fund-me.svg"],
+      href: "/vesting",
+      currentUrl: pathname,
+    },
   ];
 
   return (
