@@ -40,6 +40,12 @@ export const Sidebar = () => {
       href: "/vesting",
       currentUrl: pathname,
     },
+    {
+      label: "Payouts",
+      imageSrc: ["/fund-me-white.svg", "/fund-me.svg"],
+      href: "/my-payouts",
+      currentUrl: pathname,
+    },
   ];
 
   return (
