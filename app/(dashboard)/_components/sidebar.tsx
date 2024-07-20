@@ -41,6 +41,12 @@ export const Sidebar = () => {
       currentUrl: pathname,
     },
     {
+      label: "Escrow",
+      imageSrc: ["/fund-me-white.svg", "/fund-me.svg"],
+      href: "/escrow",
+      currentUrl: pathname,
+    },
+    {
       label: "Payouts",
       imageSrc: ["/fund-me-white.svg", "/fund-me.svg"],
       href: "/my-payouts",
