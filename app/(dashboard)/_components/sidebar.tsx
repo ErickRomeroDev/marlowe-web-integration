@@ -47,6 +47,12 @@ export const Sidebar = () => {
       currentUrl: pathname,
     },
     {
+      label: "Payment Splitter",
+      imageSrc: ["/fund-me-white.svg", "/fund-me.svg"],
+      href: "/paymentSplitter",
+      currentUrl: pathname,
+    },
+    {
       label: "Payouts",
       imageSrc: ["/fund-me-white.svg", "/fund-me.svg"],
       href: "/my-payouts",
