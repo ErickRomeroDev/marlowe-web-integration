@@ -49,7 +49,7 @@ const ProjectAnnotationsGuard = t.union([
   t.literal("PaymentCancelClose"),
 ]);
 
-type ProjectState =
+export type ProjectState =
   | InitialState
   | PaymentDeposited
   | PaymentMissed
@@ -138,16 +138,16 @@ const projectTemplate = mkMarloweTemplate({
       description: "Who is receiving the payment",
       type: "address",
     },
-    {
-      name: "payee2",
-      description: "Who is receiving the payment",
-      type: "address",
-    },
-    {
-      name: "payee3",
-      description: "Who is receiving the payment",
-      type: "address",
-    },
+    // {
+    //   name: "payee2",
+    //   description: "Who is receiving the payment",
+    //   type: "address",
+    // },
+    // {
+    //   name: "payee3",
+    //   description: "Who is receiving the payment",
+    //   type: "address",
+    // },
     // {
     //   name: "payee4",
     //   description: "Who is receiving the payment",
@@ -199,8 +199,8 @@ const projectTemplate = mkMarloweTemplate({
 });
 
 // const address1 = addressBech32("addr_test1qzjx6xzkz3l58r6t24fjn3r0ygvn87d2fwdrdlfvpvfpjvjwladqsndw3y6r3t5ra7ecys6uplm0glyx24kvfm9t5x8s8xegh6");
-// const address2 = addressBech32("addr_test1qz87c32zumms5lp64fgmsucaucq0muhuu9u4fjeaxzed486wladqsndw3y6r3t5ra7ecys6uplm0glyx24kvfm9t5x8shd2max");
-// const address3 = addressBech32("addr_test1qzvanymmffg7h75erjm99d7t7pq9efzgmjw683ndmkzzxa6wladqsndw3y6r3t5ra7ecys6uplm0glyx24kvfm9t5x8ssmglnl");
+const address2 = addressBech32("addr_test1qz87c32zumms5lp64fgmsucaucq0muhuu9u4fjeaxzed486wladqsndw3y6r3t5ra7ecys6uplm0glyx24kvfm9t5x8shd2max");
+const address3 = addressBech32("addr_test1qzvanymmffg7h75erjm99d7t7pq9efzgmjw683ndmkzzxa6wladqsndw3y6r3t5ra7ecys6uplm0glyx24kvfm9t5x8ssmglnl");
 const address4 = addressBech32(
   "addr_test1qz6cs6t683eg49f9d7d8hayq89k5rd4kuh5xdym3sgscqw6wladqsndw3y6r3t5ra7ecys6uplm0glyx24kvfm9t5x8s7ltg0z"
 );
@@ -265,7 +265,7 @@ function mkBundle(
             token: lovelace,
             then: {
               from_account: { address: scheme.payee },
-              to: { party: { address: scheme.payee2 } },
+              to: { party: { address: address2 } },
               pay: {
                 divide: {
                   amount_of_token: lovelace,
@@ -276,7 +276,7 @@ function mkBundle(
               token: lovelace,
               then: {
                 from_account: { address: scheme.payee },
-                to: { party: { address: scheme.payee3 } },
+                to: { party: { address: address3 } },
                 pay: {
                   divide: {
                     amount_of_token: lovelace,
@@ -660,7 +660,7 @@ export async function getContractInfoPlus(
   return contractInfo;
 }
 
-async function projectValidationMetadata(
+export async function projectValidationMetadata(
   lifecycle: RuntimeLifecycle,
   contractId: ContractId
 ): Promise<ProjectValidationMetadataResults> {
