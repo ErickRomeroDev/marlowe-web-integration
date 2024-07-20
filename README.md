@@ -56,7 +56,7 @@ Procedure for designing, creating, testing and integrating Marlowe smart contrac
 - **Web Integration:** After testing the contract using CLI commands, the web integration process begins. This involves connecting the contract logic with a web framework, ensuring proper integration, incorporating a wallet plugin, and focusing on UI and UX design. Additionally, it includes testing to confirm that the contract executes as expected within the web environment.
 
 Next, we include a list of contracts included in this repository that have been tested using some of the features and procedures mentioned earlier.
-Live DAPP is available at this link: https://example-dapp-seven.vercel.app/
+Live DAPP is available at this link: https://marlowe.eddalabs.io/
 
 ### Deposit Contract
 
